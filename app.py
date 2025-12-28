@@ -4,6 +4,7 @@ import io
 import time
 
 # --- IMPORT LOCAL MODULES ---
+# Ensure these files are in the same folder
 from phase2_ingest import NeuralIngestor
 from phase3_intent import CognitiveIntentEngine
 from phase8_actions import ExecutionActionSuite
@@ -19,7 +20,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. CSS STYLING (THEME & RESIZABLE INPUT) ---
+# --- 2. CSS STYLING (Blue Theme) ---
 st.markdown("""
 <style>
     /* Background */
@@ -27,16 +28,16 @@ st.markdown("""
     
     /* Typography */
     h1, h2, h3, h4 { font-family: 'Impact', sans-serif !important; color: #3b8ed0 !important; letter-spacing: 1px; }
-    p, label, .stMarkdown { font-family: 'Roboto', sans-serif !important; }
+    p, label, .stMarkdown, .stTextInput, .stTextArea { font-family: 'Roboto', sans-serif !important; }
     .stDataFrame { font-family: 'Consolas', monospace !important; }
     
-    /* Input Box Styling - FORCE RESIZABLE */
+    /* Input Box Styling - RESIZABLE */
     textarea {
         font-family: 'Consolas', monospace !important;
-        resize: vertical !important; /* Adds the drag handle */
+        resize: vertical !important;
         min-height: 150px !important;
     }
-    
+
     /* Button Styling (Blue) */
     div.stButton > button {
         width: 100%;
@@ -61,15 +62,15 @@ st.markdown("""
     .guide-card {
         background-color: #1c1f26;
         border-radius: 8px;
-        padding: 12px;
-        margin-bottom: 12px;
+        padding: 10px;
+        margin-bottom: 10px;
         border-left: 4px solid #3b8ed0;
         box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     }
     .guide-title {
         color: #fff;
         font-weight: bold;
-        font-size: 14px;
+        font-size: 13px;
         margin-bottom: 5px;
     }
     .guide-cmd {
@@ -86,57 +87,52 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- 3. INITIALIZE ENGINES ---
-if 'engines_loaded' not in st.session_state:
+# --- 3. INITIALIZE ENGINES (Cached) ---
+if 'ingestor' not in st.session_state:
     st.session_state.ingestor = NeuralIngestor()
     st.session_state.intent_engine = CognitiveIntentEngine()
     st.session_state.action_suite = ExecutionActionSuite()
-    st.session_state.engines_loaded = True
 
-# --- 4. STATE ---
+# --- 4. SESSION STATE VARIABLES ---
 if 'df' not in st.session_state: st.session_state.df = None
 if 'chat_log' not in st.session_state: st.session_state.chat_log = []
 if 'undo_stack' not in st.session_state: st.session_state.undo_stack = []
-if 'save_mode' not in st.session_state: st.session_state.save_mode = False
 
-# --- 5. LOGIC ---
+# --- 5. CORE FUNCTIONS ---
 
 def log_msg(sender, msg):
     timestamp = pd.Timestamp.now().strftime("%H:%M")
     icon = "🦇" if sender == "JEFF" else "👤" if sender == "USER" else "⚠️"
+    # Insert new message at the top
     entry = f"**{icon} [{timestamp}] {sender}:**\n\n{msg}\n\n---"
     st.session_state.chat_log.insert(0, entry)
 
-def undo_action():
-    if st.session_state.undo_stack:
-        st.session_state.df = st.session_state.undo_stack.pop()
-        log_msg("JEFF", "Reverted to previous state.")
-        st.toast("Undo Successful", icon="⏪")
-    else:
-        st.toast("Nothing to undo!", icon="🚫")
-
 def ingest_data():
-    raw_text = st.session_state.raw_input_area
+    raw_text = st.session_state.get("raw_input_area", "")
     if not raw_text.strip():
-        st.toast("Paste data first.", icon="⚠️")
+        st.toast("Please paste data first.", icon="⚠️")
         return
 
     log_msg("JEFF", "Ingesting Data...")
     try:
-        st.session_state.undo_stack = []
+        st.session_state.undo_stack = [] # Reset undo history
+        
+        # --- EXECUTE PIPELINE ---
         df = st.session_state.ingestor.build_diagnostic_dataframe(raw_text)
         schema = SchemaInferenceEngine().infer(df)
         df = DataMaterializer().materialize(df, schema)
         df = SchemaLockMaster().lock(df, schema)
+        
         st.session_state.df = df
-        log_msg("JEFF", f"Data Materialized. {len(df)} rows.")
-        st.toast("Data Loaded", icon="✅")
+        log_msg("JEFF", f"Data Materialized. {len(df)} rows found.")
+        st.toast("Data Loaded Successfully", icon="✅")
+        
     except Exception as e:
         log_msg("ERROR", str(e))
         st.error(f"Ingest Failed: {e}")
 
 def run_command():
-    cmd = st.session_state.cmd_input_box
+    cmd = st.session_state.get("cmd_input_box", "")
     if not cmd.strip(): return
     
     if st.session_state.df is None:
@@ -151,69 +147,96 @@ def run_command():
         log_msg("JEFF", f"Unknown command. {suggestion}")
         return
 
+    # Snapshot for Undo
     st.session_state.undo_stack.append(st.session_state.df.copy())
 
     try:
+        # Web logic: Default to 'keep first' for dedupe to avoid blocking UI
         if intent["action"] == "dedupe" and "subset" not in intent["parameters"]:
              intent["parameters"]["keep"] = "first"
 
         new_df, result_msg = st.session_state.action_suite.execute(intent, st.session_state.df)
         st.session_state.df = new_df
         log_msg("JEFF", result_msg)
-        st.session_state.cmd_input_box = "" 
+        
+        # Clear input (Using session state assignment for reset)
+        st.session_state["cmd_input_box"] = "" 
         
     except Exception as e:
         st.session_state.undo_stack.pop()
         log_msg("ERROR", str(e))
+        st.error(f"Execution Error: {e}")
 
-def toggle_save():
-    st.session_state.save_mode = not st.session_state.save_mode
+def undo_action():
+    if st.session_state.undo_stack:
+        st.session_state.df = st.session_state.undo_stack.pop()
+        log_msg("JEFF", "Reverted to previous state.")
+        st.toast("Undo Successful", icon="⏪")
+    else:
+        st.toast("Nothing to undo!", icon="🚫")
 
-# --- 6. SIDEBAR ---
+
+# --- 6. SIDEBAR LOG ---
 with st.sidebar:
     st.header("📜 SESSION LOG")
     st.divider()
     for log_entry in st.session_state.chat_log:
         st.markdown(log_entry)
 
-# --- 7. MAIN LAYOUT ---
+
+# --- 7. MAIN LAYOUT (4 COLUMNS) ---
 st.title("🦇 JEFF DATA ANALYST")
 
-col1, col2, col3, col4 = st.columns([1, 1, 1.2, 2.5], gap="small")
+# Define columns: Input(1) | Actions(1) | Guide(1) | Output(2.5)
+col1, col2, col3, col4 = st.columns([1, 1, 1, 2.5], gap="small")
 
-# === COL 1: INPUT (RESIZABLE) ===
+# === COLUMN 1: INPUT ===
 with col1:
     st.subheader("1. INPUT")
-    # Height set to 250px default, but CSS allows dragging it larger
-    st.text_area("Raw Data:", height=250, key="raw_input_area", placeholder="Paste Excel/CSV...", label_visibility="collapsed")
+    st.text_area("Raw Data:", height=250, key="raw_input_area", placeholder="Paste Excel/CSV content here...", label_visibility="collapsed")
     st.button("⚡ INGEST", on_click=ingest_data)
 
-# === COL 2: ACTIONS ===
+# === COLUMN 2: ACTIONS & SAVE ===
 with col2:
     st.subheader("2. ACTION")
+    # Command Input
     st.text_input("Command:", key="cmd_input_box", placeholder="Type here...", label_visibility="collapsed", on_change=run_command)
+    
+    # Execution Buttons
     st.button("▶ EXECUTE", on_click=run_command)
     st.button("⏪ UNDO LAST", on_click=undo_action)
     
-    if st.button("💾 SAVE FILE"):
-        toggle_save()
+    st.divider()
+    
+    # --- ROBUST SAVE LOGIC ---
+    # Only show if data exists. No toggle button needed.
+    if st.session_state.df is not None:
+        st.markdown("**💾 Save File**")
+        fname = st.text_input("Filename:", value="analysis", label_visibility="collapsed")
         
-    if st.session_state.save_mode and st.session_state.df is not None:
-        fname = st.text_input("Filename:", value="analysis")
-        if fname:
-            final_name = f"{fname}.xlsx"
-            buffer = io.BytesIO()
-            clean_df = st.session_state.df.loc[:, ~st.session_state.df.columns.str.startswith('_')]
-            with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-                clean_df.to_excel(writer, index=False)
-            st.download_button(label=f"⬇️ Download", data=buffer, file_name=final_name, mime="application/vnd.ms-excel")
+        # Prepare the file in memory
+        clean_df = st.session_state.df.loc[:, ~st.session_state.df.columns.str.startswith('_')]
+        buffer = io.BytesIO()
+        with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
+            clean_df.to_excel(writer, index=False)
+            
+        # The Download Button acts as the "Save" action
+        st.download_button(
+            label="⬇️ DOWNLOAD EXCEL",
+            data=buffer,
+            file_name=f"{fname}.xlsx",
+            mime="application/vnd.ms-excel"
+        )
+    else:
+        # Disabled state
+        st.button("💾 SAVE FILE", disabled=True)
 
-# === COL 3: NEURAL GUIDE ===
+# === COLUMN 3: NEURAL GUIDE (HTML CARDS) ===
 with col3:
     st.subheader("3. GUIDE")
     
     st.markdown("""
-    <div style="height: 450px; overflow-y: auto; padding-right: 5px;">
+    <div style="height: 400px; overflow-y: auto; padding-right: 5px;">
         
         <div class="guide-card">
             <div class="guide-title">🛠️ EDITING</div>
@@ -225,7 +248,7 @@ with col3:
             <div class="guide-title">🧹 CLEANING</div>
             <div class="guide-cmd">Fill missing in Age with 0</div>
             <div class="guide-cmd">Replace 'NY' with 'New York'</div>
-            <div class="guide-cmd">Dedupe (Removes duplicates)</div>
+            <div class="guide-cmd">Dedupe</div>
         </div>
 
         <div class="guide-card">
@@ -246,13 +269,14 @@ with col3:
     </div>
     """, unsafe_allow_html=True)
 
-# === COL 4: OUTPUT ===
+# === COLUMN 4: OUTPUT (FILTERED) ===
 with col4:
     if st.session_state.df is not None:
+        # Filter out internal columns starting with '_'
         clean_view = st.session_state.df.loc[:, ~st.session_state.df.columns.str.startswith('_')]
         rows, cols = clean_view.shape
         st.success(f"**ACTIVE DATA:** {rows} Rows | {cols} Columns")
         st.dataframe(clean_view, height=750, use_container_width=True)
     else:
         st.warning("WAITING FOR DATA...")
-        st.markdown("<br><br><center><h3>NO DATA</h3></center>", unsafe_allow_html=True)
+        st.markdown("<br><br><center><h3 style='color:#555;'>NO DATA LOADED</h3></center>", unsafe_allow_html=True)
