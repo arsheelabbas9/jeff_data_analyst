@@ -18,28 +18,34 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. HYPER-POLISHED CSS ---
+# --- 2. FINAL CSS (Zero Space & Polished) ---
 st.markdown("""
 <style>
-    /* 1. GLOBAL RESET & THEME */
-    .stApp { background-color: #0b0e11; }
-    #MainMenu, footer, header { visibility: hidden; }
+    /* 1. REMOVE TOP EMPTY SPACE */
+    .block-container {
+        padding-top: 0.5rem !important;
+        padding-bottom: 0rem !important;
+        max-width: 99% !important;
+    }
+    header, footer { visibility: hidden; }
     
-    /* 2. GLASS CONTAINERS */
+    /* 2. GLOBAL THEME */
+    .stApp { background-color: #0b0e11; }
+    
+    /* 3. GLASS CONTAINERS */
     div[data-testid="stVerticalBlock"] > div[data-testid="stVerticalBlockBorderWrapper"] {
         background-color: #151921;
         border: 1px solid #2a2e35;
         border-radius: 10px;
-        padding: 18px;
+        padding: 15px;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
     }
 
-    /* 3. TYPOGRAPHY */
+    /* 4. TYPOGRAPHY */
     h1 { 
         font-family: 'Impact', sans-serif !important; 
         color: #3b8ed0 !important; 
-        font-size: 34px !important; 
-        text-shadow: 0 0 10px rgba(59, 142, 208, 0.4);
+        font-size: 28px !important; 
         margin-bottom: 5px !important;
     }
     h3 { 
@@ -49,64 +55,53 @@ st.markdown("""
         color: #6c757d !important; 
         text-transform: uppercase; 
         letter-spacing: 1.5px;
-        margin-bottom: 12px !important;
+        margin-bottom: 10px !important;
     }
     
-    /* 4. DATA INPUT BOX (The Big One) */
+    /* 5. DATA INPUT BOX */
     .data-input textarea {
         background-color: #080a0c !important;
-        color: #a6e22e !important; /* Matrix Green */
+        color: #a6e22e !important;
         border: 1px solid #333 !important;
         font-family: 'Consolas', monospace !important;
         border-radius: 6px;
         min-height: 400px !important;
-        font-size: 12px !important;
+        font-size: 11px !important;
         resize: none;
     }
     
-    /* 5. COMMAND INPUT BOX (The New Box) */
+    /* 6. COMMAND BOX */
     .cmd-input textarea {
         background-color: #1c2128 !important;
-        color: #ffffff !important; /* White Text */
-        border: 1px solid #3b8ed0 !important; /* Blue Border */
+        color: #ffffff !important;
+        border: 1px solid #3b8ed0 !important;
         font-family: 'Consolas', monospace !important;
         border-radius: 6px;
-        min-height: 100px !important; /* Shorter Box */
-        font-size: 13px !important;
+        min-height: 100px !important;
+        font-size: 12px !important;
         resize: none;
     }
 
-    /* 6. BUTTONS */
+    /* 7. BUTTONS */
     div.stButton > button {
-        width: 100%; border-radius: 6px; font-weight: 700; font-size: 12px;
+        width: 100%; border-radius: 6px; font-weight: 700; font-size: 11px;
         background-color: #1f232d; color: #3b8ed0; border: 1px solid #3b8ed0;
-        transition: all 0.2s; height: 38px; text-transform: uppercase;
+        transition: all 0.2s; height: 35px; text-transform: uppercase;
     }
     div.stButton > button:hover { 
-        background-color: #3b8ed0; color: white; 
-        box-shadow: 0 0 10px rgba(59, 142, 208, 0.5); 
+        background-color: #3b8ed0; color: white; box-shadow: 0 0 10px rgba(59, 142, 208, 0.5); 
     }
 
-    /* 7. CUSTOM TABS */
-    .stTabs [data-baseweb="tab-list"] {
-        background-color: transparent; gap: 8px; border-bottom: 1px solid #2a2e35; padding-bottom: 0px;
-    }
-    .stTabs [data-baseweb="tab"] {
-        height: 35px; background-color: transparent; color: #555; font-size: 11px; font-weight: 700; border: none; padding: 0 10px;
-    }
-    .stTabs [data-baseweb="tab"][aria-selected="true"] {
-        color: #3b8ed0; background-color: transparent; border-bottom: 2px solid #3b8ed0;
-    }
+    /* 8. CUSTOM TABS */
+    .stTabs [data-baseweb="tab-list"] { background-color: transparent; gap: 5px; border-bottom: 1px solid #2a2e35; padding-bottom: 0px; }
+    .stTabs [data-baseweb="tab"] { height: 30px; background-color: transparent; color: #555; font-size: 10px; font-weight: 700; border: none; padding: 0 8px; }
+    .stTabs [data-baseweb="tab"][aria-selected="true"] { color: #3b8ed0; background-color: transparent; border-bottom: 2px solid #3b8ed0; }
 
-    /* 8. GUIDE CONTENT */
-    .cmd-box { margin-bottom: 10px; border-left: 2px solid #333; padding-left: 10px; }
-    .cmd-title { color: #ddd; font-weight: bold; font-size: 12px; display: block; }
-    .cmd-desc { color: #666; font-size: 10px; font-style: italic; margin-bottom: 4px; display: block; }
-    .cmd-code { 
-        font-family: 'Consolas', monospace; color: #a6e22e; 
-        background: #080a0c; padding: 2px 6px; border-radius: 4px; 
-        border: 1px solid #222; font-size: 10px; 
-    }
+    /* 9. GUIDE CONTENT */
+    .cmd-box { margin-bottom: 8px; border-left: 2px solid #333; padding-left: 8px; }
+    .cmd-title { color: #ddd; font-weight: bold; font-size: 11px; display: block; }
+    .cmd-desc { color: #666; font-size: 9px; font-style: italic; margin-bottom: 2px; display: block; }
+    .cmd-code { font-family: 'Consolas', monospace; color: #a6e22e; background: #080a0c; padding: 2px 4px; border-radius: 4px; border: 1px solid #222; font-size: 9px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -117,12 +112,12 @@ if 'engines_loaded' not in st.session_state:
     st.session_state.action_suite = ExecutionActionSuite()
     st.session_state.engines_loaded = True
 
-# --- 4. SESSION STATE ---
+# --- 4. STATE MANAGEMENT ---
 if 'df' not in st.session_state: st.session_state.df = None
 if 'chat_log' not in st.session_state: st.session_state.chat_log = []
 if 'undo_stack' not in st.session_state: st.session_state.undo_stack = []
 
-# --- 5. LOGIC ---
+# --- 5. LOGIC FUNCTIONS ---
 def log_msg(sender, msg):
     timestamp = pd.Timestamp.now().strftime("%H:%M")
     icon = "🦇" if sender == "JEFF" else "👤" if sender == "USER" else "⚠️"
@@ -168,7 +163,6 @@ def run_command():
         new_df, result_msg = st.session_state.action_suite.execute(intent, st.session_state.df)
         st.session_state.df = new_df
         log_msg("JEFF", result_msg)
-        # Note: We don't auto-clear text_area easily without rerun, so we keep it or rely on user
     except Exception as e:
         st.session_state.undo_stack.pop()
         log_msg("ERROR", str(e))
@@ -186,18 +180,17 @@ with st.sidebar:
     for log_entry in st.session_state.chat_log:
         st.markdown(log_entry)
 
-# --- 7. MAIN LAYOUT ---
+# --- 7. MAIN DASHBOARD ---
 st.title("🦇 JEFF DATA ANALYST")
 
-# [CHANGE]: Symmetrical Layout [2.0, 1.2, 1.3, 2.0]
-# Input (2.0) == Monitor (2.0)
-c1, c2, c3, c4 = st.columns([2.0, 1.2, 1.3, 2.0], gap="small")
+# [CHANGE]: New Ratios -> Input(1.4), Control(1.2), Guide(1.3), Monitor(2.6)
+# Space shifted from Input to Monitor as requested.
+c1, c2, c3, c4 = st.columns([1.4, 1.2, 1.3, 2.6], gap="small")
 
 # === CARD 1: INPUT ===
 with c1:
     with st.container(border=True):
         st.markdown("### INPUT")
-        # Added specific class for styling
         st.markdown('<div class="data-input">', unsafe_allow_html=True)
         st.text_area("Data", height=400, key="raw_input_area", placeholder="Paste Excel/CSV...", label_visibility="collapsed")
         st.markdown('</div>', unsafe_allow_html=True)
@@ -207,8 +200,6 @@ with c1:
 with c2:
     with st.container(border=True):
         st.markdown("### CONTROL")
-        
-        # [CHANGE] Replaced text_input with text_area (The Box)
         st.markdown('<div class="cmd-input">', unsafe_allow_html=True)
         st.text_area("Cmd", height=100, key="cmd_input_box", placeholder="Type Command Here...", label_visibility="collapsed")
         st.markdown('</div>', unsafe_allow_html=True)
@@ -228,34 +219,40 @@ with c2:
         else:
             st.button("⬇️ DOWNLOAD", disabled=True)
 
-# === CARD 3: GUIDE ===
+# === CARD 3: GUIDE (ALL FEATURES INCLUDED) ===
 with c3:
     with st.container(border=True):
         st.markdown("### GUIDE")
         
         t1, t2, t3, t4 = st.tabs(["EDIT", "CLEAN", "STRUCT", "DATA"])
         
-        with t1:
+        with t1: # EDITING
             st.markdown("""
-            <div class="cmd-box"><span class="cmd-title">Update Cell</span><span class="cmd-desc">Change specific value.</span><div class="cmd-code">Update Salary to 5000 where ID is 1</div></div>
+            <div class="cmd-box"><span class="cmd-title">Update Cell</span><span class="cmd-desc">Change value by ID.</span><div class="cmd-code">Update Salary to 5000 where ID is 1</div></div>
             <div class="cmd-box"><span class="cmd-title">Update Row</span><span class="cmd-desc">Edit by row number.</span><div class="cmd-code">Update Row 5 Name to Batman</div></div>
             """, unsafe_allow_html=True)
-        with t2:
+            
+        with t2: # CLEANING
             st.markdown("""
-            <div class="cmd-box"><span class="cmd-title">Fill Missing</span><span class="cmd-desc">Fix empty cells.</span><div class="cmd-code">Fill missing in Age with 0</div></div>
-            <div class="cmd-box"><span class="cmd-title">Replace</span><span class="cmd-desc">Global text replace.</span><div class="cmd-code">Replace 'NY' with 'New York'</div></div>
-            <div class="cmd-box"><span class="cmd-title">Dedupe</span><span class="cmd-desc">Remove duplicates.</span><div class="cmd-code">Dedupe</div></div>
+            <div class="cmd-box"><span class="cmd-title">Fill Missing</span><span class="cmd-desc">Fix null values.</span><div class="cmd-code">Fill missing in Age with 0</div></div>
+            <div class="cmd-box"><span class="cmd-title">Replace</span><span class="cmd-desc">Find & Replace text.</span><div class="cmd-code">Replace 'NY' with 'New York'</div></div>
+            <div class="cmd-box"><span class="cmd-title">Dedupe</span><span class="cmd-desc">Remove exact duplicates.</span><div class="cmd-code">Dedupe</div></div>
             """, unsafe_allow_html=True)
-        with t3:
+            
+        with t3: # STRUCTURE
             st.markdown("""
-            <div class="cmd-box"><span class="cmd-title">Rename</span><span class="cmd-desc">Change column headers.</span><div class="cmd-code">Rename 'Old' to 'New'</div></div>
-            <div class="cmd-box"><span class="cmd-title">Delete Row</span><span class="cmd-desc">Remove row by index.</span><div class="cmd-code">Delete Row 5</div></div>
+            <div class="cmd-box"><span class="cmd-title">Rename</span><span class="cmd-desc">Change headers.</span><div class="cmd-code">Rename 'Old' to 'New'</div></div>
+            <div class="cmd-box"><span class="cmd-title">Delete Row</span><span class="cmd-desc">Remove by index.</span><div class="cmd-code">Delete Row 5</div></div>
+            <div class="cmd-box"><span class="cmd-title">Delete Col</span><span class="cmd-desc">Remove column.</span><div class="cmd-code">Delete Column 'Tax'</div></div>
             """, unsafe_allow_html=True)
-        with t4:
+            
+        with t4: # DATA & VISUALS
             st.markdown("""
-            <div class="cmd-box"><span class="cmd-title">Pivot/Group</span><span class="cmd-desc">Aggregate data.</span><div class="cmd-code">Group by City sum Sales</div></div>
-            <div class="cmd-box"><span class="cmd-title">Stats</span><span class="cmd-desc">Quick statistics.</span><div class="cmd-code">Analyze Salary</div></div>
-            <div class="cmd-box"><span class="cmd-title">Sort/Filter</span><span class="cmd-desc">Organize view.</span><div class="cmd-code">Filter Age > 25</div></div>
+            <div class="cmd-box"><span class="cmd-title">Group/Pivot</span><span class="cmd-desc">Aggregate data.</span><div class="cmd-code">Group by City sum Sales</div></div>
+            <div class="cmd-box"><span class="cmd-title">Stats</span><span class="cmd-desc">Mean, Max, Min.</span><div class="cmd-code">Analyze Salary</div></div>
+            <div class="cmd-box"><span class="cmd-title">Filter</span><span class="cmd-desc">Subset data.</span><div class="cmd-code">Filter Age > 25</div></div>
+            <div class="cmd-box"><span class="cmd-title">Sort</span><span class="cmd-desc">Order data.</span><div class="cmd-code">Sort by Date Desc</div></div>
+            <div class="cmd-box"><span class="cmd-title">Plotting</span><span class="cmd-desc">Create Histograms/Bars.</span><div class="cmd-code">Plot Age</div></div>
             """, unsafe_allow_html=True)
 
 # === CARD 4: MONITOR ===
