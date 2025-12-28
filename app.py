@@ -52,14 +52,14 @@ st.markdown("""
         margin-bottom: 12px !important;
     }
     
-    /* 4. CINEMATIC INPUT BOX */
+    /* 4. CINEMATIC INPUT BOX (SHORTER & WIDER) */
     .stTextArea textarea {
         background-color: #080a0c !important;
         color: #a6e22e !important;
         border: 1px solid #333 !important;
         font-family: 'Consolas', monospace !important;
         border-radius: 6px;
-        min-height: 450px !important;
+        min-height: 380px !important; /* REDUCED HEIGHT */
         font-size: 12px !important;
         resize: none;
         transition: border-color 0.3s;
@@ -196,18 +196,15 @@ with st.sidebar:
 # --- 7. MAIN LAYOUT ---
 st.title("🦇 JEFF DATA ANALYST")
 
-# [CHANGE]: Balanced Ratios [2.0, 1.2, 1.3, 2.0]
-# Input: Wide (2.0)
-# Control: Increased (1.2) - was 0.8
-# Guide: Same (1.3)
-# Monitor: Reduced (2.0) - was 3
-c1, c2, c3, c4 = st.columns([2.0, 1.2, 1.3, 2.0], gap="small")
+# [CHANGE]: New Ratios -> Input(2.0), Control(1.2), Guide(1.3), Monitor(1.5)
+c1, c2, c3, c4 = st.columns([2.0, 1.2, 1.3, 1.5], gap="small")
 
 # === CARD 1: INPUT ===
 with c1:
     with st.container(border=True):
         st.markdown("### INPUT")
-        st.text_area("Data", height=450, key="raw_input_area", placeholder="Paste Excel/CSV...", label_visibility="collapsed")
+        # [CHANGE] Height reduced to 380px
+        st.text_area("Data", height=380, key="raw_input_area", placeholder="Paste Excel/CSV...", label_visibility="collapsed")
         st.button("⚡ LOAD DATA", on_click=ingest_data)
 
 # === CARD 2: CONTROLS ===
@@ -273,3 +270,8 @@ with c4:
             st.markdown("### MONITOR")
             st.info("WAITING FOR SIGNAL...")
             st.markdown("<br><br><br><br><center><h4 style='color:#333;'>NO DATA LOADED</h4></center><br><br><br>", unsafe_allow_html=True)
+
+
+
+
+
