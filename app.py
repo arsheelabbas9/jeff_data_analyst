@@ -22,10 +22,10 @@ st.set_page_config(
 st.markdown("""
 <style>
     /* 1. GLOBAL RESET & THEME */
-    .stApp { background-color: #0b0e11; } /* Darker, richer background */
+    .stApp { background-color: #0b0e11; }
     #MainMenu, footer, header { visibility: hidden; }
     
-    /* 2. GLASS CONTAINERS (The "Cards") */
+    /* 2. GLASS CONTAINERS */
     div[data-testid="stVerticalBlock"] > div[data-testid="stVerticalBlockBorderWrapper"] {
         background-color: #151921;
         border: 1px solid #2a2e35;
@@ -52,10 +52,10 @@ st.markdown("""
         margin-bottom: 12px !important;
     }
     
-    /* 4. CINEMATIC INPUT BOX (The Fix) */
+    /* 4. CINEMATIC INPUT BOX */
     .stTextArea textarea {
-        background-color: #080a0c !important; /* Very dark contrast */
-        color: #a6e22e !important; /* Matrix/Code Green text */
+        background-color: #080a0c !important;
+        color: #a6e22e !important;
         border: 1px solid #333 !important;
         font-family: 'Consolas', monospace !important;
         border-radius: 6px;
@@ -65,19 +65,17 @@ st.markdown("""
         transition: border-color 0.3s;
     }
     .stTextArea textarea:focus {
-        border-color: #3b8ed0 !important; /* Blue glow on focus */
+        border-color: #3b8ed0 !important;
         box-shadow: 0 0 10px rgba(59, 142, 208, 0.2);
     }
 
-    /* 5. CUSTOM TABS (The "Ugly" Fix) */
-    /* Tab Bar Background */
+    /* 5. CUSTOM TABS */
     .stTabs [data-baseweb="tab-list"] {
         background-color: transparent;
         gap: 8px;
         border-bottom: 1px solid #2a2e35;
         padding-bottom: 0px;
     }
-    /* Inactive Tab */
     .stTabs [data-baseweb="tab"] {
         height: 35px;
         background-color: transparent;
@@ -87,18 +85,16 @@ st.markdown("""
         border: none;
         padding: 0 10px;
     }
-    /* Active Tab (The Clean Blue Look) */
     .stTabs [data-baseweb="tab"][aria-selected="true"] {
         color: #3b8ed0;
         background-color: transparent;
-        border-bottom: 2px solid #3b8ed0; /* The Blue Underline */
+        border-bottom: 2px solid #3b8ed0;
     }
-    /* Hover Effect */
     .stTabs [data-baseweb="tab"]:hover {
         color: #3b8ed0;
     }
 
-    /* 6. BUTTONS (Standardized) */
+    /* 6. BUTTONS */
     div.stButton > button {
         width: 100%; border-radius: 6px; font-weight: 700; font-size: 12px;
         background-color: #1f232d; color: #3b8ed0; border: 1px solid #3b8ed0;
@@ -109,7 +105,7 @@ st.markdown("""
         box-shadow: 0 0 10px rgba(59, 142, 208, 0.5); 
     }
 
-    /* 7. GUIDE CONTENT STYLING */
+    /* 7. GUIDE CONTENT */
     .cmd-box { margin-bottom: 10px; border-left: 2px solid #333; padding-left: 10px; }
     .cmd-title { color: #ddd; font-weight: bold; font-size: 12px; display: block; }
     .cmd-desc { color: #666; font-size: 10px; font-style: italic; margin-bottom: 4px; display: block; }
@@ -200,7 +196,12 @@ with st.sidebar:
 # --- 7. MAIN LAYOUT ---
 st.title("🦇 JEFF DATA ANALYST")
 
-c1, c2, c3, c4 = st.columns([1.3, 1, 1.3, 3], gap="small")
+# [CHANGE]: Balanced Ratios [2.0, 1.2, 1.3, 2.0]
+# Input: Wide (2.0)
+# Control: Increased (1.2) - was 0.8
+# Guide: Same (1.3)
+# Monitor: Reduced (2.0) - was 3
+c1, c2, c3, c4 = st.columns([2.0, 1.2, 1.3, 2.0], gap="small")
 
 # === CARD 1: INPUT ===
 with c1:
@@ -230,7 +231,7 @@ with c2:
         else:
             st.button("⬇️ DOWNLOAD", disabled=True)
 
-# === CARD 3: GUIDE (POLISHED TABS) ===
+# === CARD 3: GUIDE ===
 with c3:
     with st.container(border=True):
         st.markdown("### GUIDE")
