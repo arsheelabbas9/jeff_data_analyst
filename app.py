@@ -3,8 +3,7 @@ import pandas as pd
 import io
 import time
 
-# --- IMPORT YOUR LOCAL MODULES ---
-# (Ensure these files are in the same folder as app.py)
+# --- IMPORT LOCAL MODULES ---
 from phase2_ingest import NeuralIngestor
 from phase3_intent import CognitiveIntentEngine
 from phase8_actions import ExecutionActionSuite
@@ -17,29 +16,22 @@ st.set_page_config(
     page_title="Jeff Data Analyst",
     page_icon="🦇",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="collapsed" # This hides the Session Log menu by default
 )
 
-# --- 2. CSS STYLING (THEME & LAYOUT) ---
+# --- 2. CSS STYLING ---
 st.markdown("""
 <style>
-    /* Main Background */
     .stApp { background-color: #0e1117; }
-    
-    /* Fonts: Headers (Impact), UI (Roboto), Data (Consolas) */
     h1, h2, h3 { font-family: 'Impact', sans-serif !important; color: #3b8ed0 !important; letter-spacing: 1px; }
     .stTextInput, .stTextArea, .stButton { font-family: 'Roboto', sans-serif !important; }
-    .stDataFrame, .stCode { font-family: 'Consolas', monospace !important; }
-    
-    /* Optimize Spacing */
-    .block-container { padding-top: 1.5rem; padding-bottom: 1.5rem; max-width: 95%; }
+    .stDataFrame { font-family: 'Consolas', monospace !important; }
     
     /* Button Styling */
     div.stButton > button {
         width: 100%;
         border-radius: 4px;
         font-weight: bold;
-        text-transform: uppercase;
         border: 1px solid #3b8ed0;
     }
     div.stButton > button:hover {
@@ -47,79 +39,64 @@ st.markdown("""
         color: #3b8ed0;
     }
     
-    /* Custom Box Borders */
-    div[data-testid="stExpander"] { border: 1px solid #333; border-radius: 5px; }
+    /* Success/Error Messages */
+    .stToast { font-family: 'Roboto', sans-serif !important; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 3. INITIALIZE ENGINES (Cached for Speed) ---
+# --- 3. INITIALIZE ENGINES ---
 if 'engines_loaded' not in st.session_state:
     st.session_state.ingestor = NeuralIngestor()
     st.session_state.intent_engine = CognitiveIntentEngine()
     st.session_state.action_suite = ExecutionActionSuite()
     st.session_state.engines_loaded = True
 
-# --- 4. SESSION STATE VARIABLES ---
+# --- 4. SESSION STATE ---
 if 'df' not in st.session_state: st.session_state.df = None
 if 'chat_log' not in st.session_state: st.session_state.chat_log = []
 if 'undo_stack' not in st.session_state: st.session_state.undo_stack = []
 
-# --- 5. CORE FUNCTIONS ---
+# --- 5. FUNCTIONS ---
 
 def log_msg(sender, msg, type="info"):
-    """Adds a message to the session log."""
-    timestamp = pd.Timestamp.now().strftime("%H:%M:%S")
-    color = "#3b8ed0" if sender == "JEFF" else "#2ecc71" if sender == "USER" else "#e74c3c"
+    timestamp = pd.Timestamp.now().strftime("%H:%M")
     icon = "🦇" if sender == "JEFF" else "👤" if sender == "USER" else "⚠️"
+    color = "#3b8ed0" if sender == "JEFF" else "#2ecc71" if sender == "USER" else "#e74c3c"
     
-    # HTML formatted log entry
-    entry = f"""
-    <div style='margin-bottom: 5px; font-family: Consolas, monospace; font-size: 13px; border-bottom: 1px solid #222; padding-bottom: 4px;'>
-        <span style='color: #666;'>[{timestamp}]</span> 
-        <span style='color: {color}; font-weight: bold;'>{icon} {sender}:</span> 
-        <span style='color: #ddd;'>{msg}</span>
-    </div>
-    """
-    # Insert at top so users don't have to scroll down
+    # Simple markdown log for the sidebar
+    entry = f"**{icon} [{timestamp}] {sender}:**\n\n{msg}\n\n---"
     st.session_state.chat_log.insert(0, entry)
 
 def undo_action():
-    """Reverts to the previous DataFrame state."""
     if st.session_state.undo_stack:
         st.session_state.df = st.session_state.undo_stack.pop()
-        log_msg("JEFF", "Time travel successful. Reverted to previous state.")
+        log_msg("JEFF", "Reverted to previous state.")
+        st.toast("Undo Successful", icon="⏪")
     else:
         st.toast("Nothing to undo!", icon="🚫")
 
 def ingest_data():
-    """Reads raw text from the input box and materializes it."""
     raw_text = st.session_state.raw_input_area
     if not raw_text.strip():
-        st.toast("Please paste some data first.", icon="⚠️")
+        st.toast("Paste data first.", icon="⚠️")
         return
 
-    log_msg("JEFF", "Neural Ingest Initiated...")
-    
+    log_msg("JEFF", "Ingesting Data...")
     try:
-        # Reset undo stack on new load
         st.session_state.undo_stack = []
-        
-        # Phase 2-6 Pipeline
         df = st.session_state.ingestor.build_diagnostic_dataframe(raw_text)
         schema = SchemaInferenceEngine().infer(df)
         df = DataMaterializer().materialize(df, schema)
         df = SchemaLockMaster().lock(df, schema)
         
         st.session_state.df = df
-        log_msg("JEFF", f"Data Materialized. Shape: {df.shape}")
+        log_msg("JEFF", f"Data Materialized. {len(df)} rows.")
         st.toast("Data Loaded Successfully", icon="✅")
-        
     except Exception as e:
         log_msg("ERROR", str(e))
         st.error(f"Ingest Failed: {e}")
 
 def run_command():
-    """Parses and executes the NLP command."""
     cmd = st.session_state.cmd_input_box
     if not cmd.strip(): return
     
@@ -128,150 +105,135 @@ def run_command():
         return
 
     log_msg("USER", cmd)
-
-    # Analyze Intent
     intent = st.session_state.intent_engine.analyze_command(cmd, st.session_state.df.columns)
 
     if intent["action"] == "unknown":
-        suggestion = intent['suggestions'][0] if intent['suggestions'] else "Try 'Sort by [Col]'"
-        log_msg("JEFF", f"Unknown command. {suggestion}", type="error")
+        suggestion = intent['suggestions'][0] if intent['suggestions'] else "Try 'Sort by Salary'"
+        log_msg("JEFF", f"Unknown command. {suggestion}")
+        st.toast("Unknown Command", icon="❓")
         return
 
-    # Save state for Undo
     st.session_state.undo_stack.append(st.session_state.df.copy())
 
     try:
-        # Web-specific logic for interactive features
         if intent["action"] == "dedupe" and "subset" not in intent["parameters"]:
-             # Default to 'first' on web to avoid complex modal logic
              intent["parameters"]["keep"] = "first"
 
-        # Execute
         new_df, result_msg = st.session_state.action_suite.execute(intent, st.session_state.df)
         st.session_state.df = new_df
         log_msg("JEFF", result_msg)
-        
-        # Clear input box (requires key hack or just leave it)
         st.session_state.cmd_input_box = "" 
         
     except Exception as e:
-        st.session_state.undo_stack.pop() # Revert save if failed
+        st.session_state.undo_stack.pop()
         log_msg("ERROR", str(e))
+        st.toast("Execution Failed", icon="❌")
 
-# --- 6. MAIN DASHBOARD LAYOUT ---
+# --- 6. SIDEBAR (THE "MENU" BUTTON) ---
+with st.sidebar:
+    st.header("📜 SESSION LOG")
+    st.markdown("Here is the history of your current analysis session.")
+    st.divider()
+    # Display logs in the sidebar menu
+    for log_entry in st.session_state.chat_log:
+        st.markdown(log_entry)
 
+# --- 7. MAIN LAYOUT (TRI-COLUMN) ---
 st.title("🦇 JEFF DATA ANALYST")
 
-# Split: Left (35%) | Right (65%)
-col_left, col_right = st.columns([1.2, 2.2], gap="large")
+# Define Columns: Input (1) | Command (1) | Output (2)
+col_input, col_cmd, col_output = st.columns([1, 1, 2], gap="medium")
 
-# === LEFT PANEL: CONTROL DECK ===
-with col_left:
-    st.subheader("1. SOURCE DATA")
+# === COLUMN 1: INPUT DECK ===
+with col_input:
+    st.subheader("1. SOURCE")
     st.text_area(
-        "Paste Excel/CSV data here:", 
-        height=120, 
+        "Raw Data Input:", 
+        height=300, 
         key="raw_input_area",
-        placeholder="Paste your raw data here...",
+        placeholder="Copy from Excel/CSV and paste here...",
         label_visibility="collapsed"
     )
     st.button("⚡ INGEST DATA", on_click=ingest_data, type="primary")
+    
+    st.info("ℹ️ **Tip:** Paste raw data including headers. Jeff will auto-detect the structure.")
+
+# === COLUMN 2: COMMAND CENTER ===
+with col_cmd:
+    st.subheader("2. ACTIONS")
+    
+    # Command Input
+    st.text_input(
+        "Command:", 
+        key="cmd_input_box", 
+        placeholder="Type command here...",
+        label_visibility="collapsed",
+        on_change=run_command
+    )
+    
+    # Action Buttons
+    c1, c2 = st.columns(2)
+    with c1: st.button("▶ EXECUTE", on_click=run_command)
+    with c2: st.button("⏪ UNDO", on_click=undo_action)
+    
+    if st.session_state.df is not None:
+        buffer = io.BytesIO()
+        with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
+            st.session_state.df.to_excel(writer, index=False)
+        st.download_button("💾 DOWNLOAD", data=buffer, file_name="analysis.xlsx", mime="application/vnd.ms-excel")
+    else:
+        st.button("💾 DOWNLOAD", disabled=True)
 
     st.divider()
 
-    st.subheader("2. NEURAL COMMAND")
-    # Using a form allows hitting 'Enter' to submit
-    with st.form(key='cmd_form', clear_on_submit=True):
-        st.text_input(
-            "Command:", 
-            key="cmd_input_box", 
-            placeholder="e.g., 'Sort by Salary' or 'Filter Age > 25'",
-            label_visibility="collapsed"
-        )
-        c1, c2 = st.columns([3, 1])
-        with c1:
-            submit = st.form_submit_button("▶ EXECUTE COMMAND")
-        with c2:
-            # Undo is outside form usually, but Streamlit forms are tricky. 
-            # We'll rely on the callback for the submit button.
-            pass
-            
-    if submit:
-        run_command()
-
-    # Action Row
-    b1, b2 = st.columns(2)
-    with b1:
-        st.button("⏪ UNDO LAST", on_click=undo_action)
-    with b2:
-        if st.session_state.df is not None:
-            # Excel Export Logic
-            buffer = io.BytesIO()
-            with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-                st.session_state.df.to_excel(writer, index=False)
-            st.download_button(
-                label="💾 DOWNLOAD",
-                data=buffer,
-                file_name="jeff_analysis.xlsx",
-                mime="application/vnd.ms-excel"
-            )
-        else:
-            st.button("💾 DOWNLOAD", disabled=True)
-
-    # Cheat Sheet (Always Visible Expander)
-    with st.expander("📝 NEURAL GUIDE (CHEAT SHEET)", expanded=True):
+    # Detailed Cheat Sheet
+    st.markdown("#### 🧠 NEURAL GUIDE")
+    
+    with st.expander("🛠️ EDITING & CLEANING", expanded=True):
         st.markdown("""
-        <div style='font-family: Consolas; font-size: 12px; color: #aaa;'>
-        <b>EDIT:</b> "Update Salary to 5000 where ID is 1"<br>
-        <b>CLEAN:</b> "Fill missing in Age with 0"<br>
-        <b>GROUP:</b> "Group by City sum Sales"<br>
-        <b>STATS:</b> "Analyze Salary"<br>
-        <b>SORT:</b> "Sort by Date Desc"<br>
-        <b>PLOT:</b> "Plot Age"<br>
-        <b>RENAME:</b> "Rename 'Old' to 'New'"
-        </div>
-        """, unsafe_allow_html=True)
-
-    # Session Log (Fixed Height Scrollable)
-    st.subheader("SESSION LOG")
-    with st.container(height=250):
-        # Render the HTML logs
-        for log_entry in st.session_state.chat_log:
-            st.markdown(log_entry, unsafe_allow_html=True)
-
-# === RIGHT PANEL: DATA MONITOR ===
-with col_right:
-    if st.session_state.df is not None:
-        # Status Bar
-        rows, cols = st.session_state.df.shape
-        st.markdown(f"""
-        <div style='background-color: #1e1e1e; padding: 10px; border-radius: 5px; border-left: 5px solid #2ecc71; margin-bottom: 10px;'>
-            <span style='color: white; font-weight: bold;'>SYSTEM STATUS:</span> <span style='color: #2ecc71;'>ONLINE</span> 
-            &nbsp; | &nbsp; 
-            <span style='color: white; font-weight: bold;'>ROWS:</span> <span style='color: #ccc;'>{rows}</span>
-            &nbsp; | &nbsp; 
-            <span style='color: white; font-weight: bold;'>COLS:</span> <span style='color: #ccc;'>{cols}</span>
-        </div>
-        """, unsafe_allow_html=True)
+        **Update Values:**
+        * `Update Salary to 5000 where ID is 1`
+        * `Update Row 5 Name to Batman`
         
-        # Main Data View
-        st.dataframe(
-            st.session_state.df, 
-            use_container_width=True, 
-            height=780,
-            hide_index=True
-        )
-    else:
-        # Empty State Placeholder
-        st.info("AWAITING DATA INPUT...")
-        st.code("""
+        **Cleaning:**
+        * `Fill missing in Age with 0`
+        * `Replace 'NY' with 'New York'`
+        * `Dedupe` (Removes duplicates)
         
-        
-            [ NO DATA LOADED ]
-            
-            1. Copy data from Excel/CSV
-            2. Paste into the 'SOURCE DATA' box on the left
-            3. Click 'INGEST DATA'
-            
-        
+        **Structure:**
+        * `Rename 'Old' to 'New'`
+        * `Delete Row 5`
+        * `Delete Column 'Tax'`
         """)
+        
+    with st.expander("📊 ANALYSIS & VISUALS", expanded=True):
+        st.markdown("""
+        **Pivot / Grouping:**
+        * `Group by City sum Sales`
+        * `Group by Dept count ID`
+        
+        **Statistics:**
+        * `Analyze Salary` (Mean, Max, Min)
+        
+        **Sorting & Filtering:**
+        * `Sort by Date Desc`
+        * `Filter Age > 25`
+        
+        **Charts:**
+        * `Plot Age` (Histogram/Bar)
+        """)
+
+# === COLUMN 3: LIVE OUTPUT ===
+with col_output:
+    if st.session_state.df is not None:
+        rows, cols = st.session_state.df.shape
+        st.success(f"**STATUS: ACTIVE** | {rows} Rows | {cols} Columns")
+        st.dataframe(st.session_state.df, height=750, use_container_width=True)
+    else:
+        st.warning("WAITING FOR DATA...")
+        st.markdown("""
+        <div style='text-align: center; color: #555; padding-top: 100px;'>
+            <h3>NO DATA LOADED</h3>
+            <p>Paste data in Column 1 to begin.</p>
+        </div>
+        """, unsafe_allow_html=True)
