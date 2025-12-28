@@ -52,46 +52,28 @@ st.markdown("""
         margin-bottom: 12px !important;
     }
     
-    /* 4. CINEMATIC INPUT BOX (SHORTER & WIDER) */
-    .stTextArea textarea {
+    /* 4. DATA INPUT BOX (The Big One) */
+    .data-input textarea {
         background-color: #080a0c !important;
-        color: #a6e22e !important;
+        color: #a6e22e !important; /* Matrix Green */
         border: 1px solid #333 !important;
         font-family: 'Consolas', monospace !important;
         border-radius: 6px;
-        min-height: 380px !important; /* REDUCED HEIGHT */
+        min-height: 400px !important;
         font-size: 12px !important;
         resize: none;
-        transition: border-color 0.3s;
     }
-    .stTextArea textarea:focus {
-        border-color: #3b8ed0 !important;
-        box-shadow: 0 0 10px rgba(59, 142, 208, 0.2);
-    }
-
-    /* 5. CUSTOM TABS */
-    .stTabs [data-baseweb="tab-list"] {
-        background-color: transparent;
-        gap: 8px;
-        border-bottom: 1px solid #2a2e35;
-        padding-bottom: 0px;
-    }
-    .stTabs [data-baseweb="tab"] {
-        height: 35px;
-        background-color: transparent;
-        color: #555;
-        font-size: 11px;
-        font-weight: 700;
-        border: none;
-        padding: 0 10px;
-    }
-    .stTabs [data-baseweb="tab"][aria-selected="true"] {
-        color: #3b8ed0;
-        background-color: transparent;
-        border-bottom: 2px solid #3b8ed0;
-    }
-    .stTabs [data-baseweb="tab"]:hover {
-        color: #3b8ed0;
+    
+    /* 5. COMMAND INPUT BOX (The New Box) */
+    .cmd-input textarea {
+        background-color: #1c2128 !important;
+        color: #ffffff !important; /* White Text */
+        border: 1px solid #3b8ed0 !important; /* Blue Border */
+        font-family: 'Consolas', monospace !important;
+        border-radius: 6px;
+        min-height: 100px !important; /* Shorter Box */
+        font-size: 13px !important;
+        resize: none;
     }
 
     /* 6. BUTTONS */
@@ -105,7 +87,18 @@ st.markdown("""
         box-shadow: 0 0 10px rgba(59, 142, 208, 0.5); 
     }
 
-    /* 7. GUIDE CONTENT */
+    /* 7. CUSTOM TABS */
+    .stTabs [data-baseweb="tab-list"] {
+        background-color: transparent; gap: 8px; border-bottom: 1px solid #2a2e35; padding-bottom: 0px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        height: 35px; background-color: transparent; color: #555; font-size: 11px; font-weight: 700; border: none; padding: 0 10px;
+    }
+    .stTabs [data-baseweb="tab"][aria-selected="true"] {
+        color: #3b8ed0; background-color: transparent; border-bottom: 2px solid #3b8ed0;
+    }
+
+    /* 8. GUIDE CONTENT */
     .cmd-box { margin-bottom: 10px; border-left: 2px solid #333; padding-left: 10px; }
     .cmd-title { color: #ddd; font-weight: bold; font-size: 12px; display: block; }
     .cmd-desc { color: #666; font-size: 10px; font-style: italic; margin-bottom: 4px; display: block; }
@@ -175,7 +168,7 @@ def run_command():
         new_df, result_msg = st.session_state.action_suite.execute(intent, st.session_state.df)
         st.session_state.df = new_df
         log_msg("JEFF", result_msg)
-        st.session_state["cmd_input_box"] = "" 
+        # Note: We don't auto-clear text_area easily without rerun, so we keep it or rely on user
     except Exception as e:
         st.session_state.undo_stack.pop()
         log_msg("ERROR", str(e))
@@ -196,22 +189,29 @@ with st.sidebar:
 # --- 7. MAIN LAYOUT ---
 st.title("🦇 JEFF DATA ANALYST")
 
-# [CHANGE]: New Ratios -> Input(2.0), Control(1.2), Guide(1.3), Monitor(1.5)
-c1, c2, c3, c4 = st.columns([2.0, 1.2, 1.3, 1.5], gap="small")
+# [CHANGE]: Symmetrical Layout [2.0, 1.2, 1.3, 2.0]
+# Input (2.0) == Monitor (2.0)
+c1, c2, c3, c4 = st.columns([2.0, 1.2, 1.3, 2.0], gap="small")
 
 # === CARD 1: INPUT ===
 with c1:
     with st.container(border=True):
         st.markdown("### INPUT")
-        # [CHANGE] Height reduced to 380px
-        st.text_area("Data", height=380, key="raw_input_area", placeholder="Paste Excel/CSV...", label_visibility="collapsed")
+        # Added specific class for styling
+        st.markdown('<div class="data-input">', unsafe_allow_html=True)
+        st.text_area("Data", height=400, key="raw_input_area", placeholder="Paste Excel/CSV...", label_visibility="collapsed")
+        st.markdown('</div>', unsafe_allow_html=True)
         st.button("⚡ LOAD DATA", on_click=ingest_data)
 
 # === CARD 2: CONTROLS ===
 with c2:
     with st.container(border=True):
         st.markdown("### CONTROL")
-        st.text_input("Cmd", key="cmd_input_box", placeholder="Type Command...", label_visibility="collapsed", on_change=run_command)
+        
+        # [CHANGE] Replaced text_input with text_area (The Box)
+        st.markdown('<div class="cmd-input">', unsafe_allow_html=True)
+        st.text_area("Cmd", height=100, key="cmd_input_box", placeholder="Type Command Here...", label_visibility="collapsed")
+        st.markdown('</div>', unsafe_allow_html=True)
         
         st.button("▶ EXECUTE", on_click=run_command)
         st.button("⏪ UNDO", on_click=undo_action)
@@ -270,8 +270,3 @@ with c4:
             st.markdown("### MONITOR")
             st.info("WAITING FOR SIGNAL...")
             st.markdown("<br><br><br><br><center><h4 style='color:#333;'>NO DATA LOADED</h4></center><br><br><br>", unsafe_allow_html=True)
-
-
-
-
-
