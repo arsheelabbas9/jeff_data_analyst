@@ -4,7 +4,6 @@ import io
 import time
 
 # --- IMPORT LOCAL MODULES ---
-# Ensure these files are in the same folder
 from phase2_ingest import NeuralIngestor
 from phase3_intent import CognitiveIntentEngine
 from phase8_actions import ExecutionActionSuite
@@ -20,7 +19,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. CSS STYLING (Blue Theme) ---
+# --- 2. CSS STYLING (Blue Buttons & Beautiful Cards) ---
 st.markdown("""
 <style>
     /* Background */
@@ -31,14 +30,15 @@ st.markdown("""
     p, label, .stMarkdown, .stTextInput, .stTextArea { font-family: 'Roboto', sans-serif !important; }
     .stDataFrame { font-family: 'Consolas', monospace !important; }
     
-    /* Input Box Styling - RESIZABLE */
+    /* Input Box Styling */
     textarea {
         font-family: 'Consolas', monospace !important;
         resize: vertical !important;
-        min-height: 150px !important;
+        min-height: 200px !important;
+        border: 1px solid #333 !important;
     }
 
-    /* Button Styling (Blue) */
+    /* FORCE BLUE BUTTONS */
     div.stButton > button {
         width: 100%;
         border-radius: 6px;
@@ -46,64 +46,70 @@ st.markdown("""
         background-color: #0e1117;
         color: #3b8ed0;
         border: 1px solid #3b8ed0;
-        transition: all 0.3s ease;
+        transition: all 0.2s ease;
     }
     div.stButton > button:hover {
         background-color: #3b8ed0;
         color: white;
-        box-shadow: 0 0 10px rgba(59, 142, 208, 0.5);
+        border-color: #3b8ed0;
+        box-shadow: 0 0 8px rgba(59, 142, 208, 0.4);
     }
     div.stButton > button:active {
         background-color: #2a6fa8;
         color: white;
     }
     
-    /* NEURAL GUIDE CARDS */
+    /* NEURAL GUIDE CARDS (The Fix) */
+    .guide-container {
+        height: 500px;
+        overflow-y: auto;
+        padding-right: 10px;
+    }
     .guide-card {
         background-color: #1c1f26;
         border-radius: 8px;
-        padding: 10px;
-        margin-bottom: 10px;
+        padding: 12px;
+        margin-bottom: 12px;
         border-left: 4px solid #3b8ed0;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
     .guide-title {
         color: #fff;
         font-weight: bold;
-        font-size: 13px;
-        margin-bottom: 5px;
+        font-size: 14px;
+        margin-bottom: 8px;
+        text-transform: uppercase;
     }
     .guide-cmd {
         background-color: #0e1117;
-        color: #a6e22e; /* Code Green */
-        padding: 4px 8px;
+        color: #a6e22e; /* Hacker Green */
+        padding: 6px 8px;
         border-radius: 4px;
         font-family: 'Consolas', monospace;
         font-size: 11px;
         display: block;
-        margin-top: 4px;
+        margin-top: 5px;
         border: 1px solid #333;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 3. INITIALIZE ENGINES (Cached) ---
+# --- 3. INITIALIZE ENGINES ---
 if 'ingestor' not in st.session_state:
     st.session_state.ingestor = NeuralIngestor()
     st.session_state.intent_engine = CognitiveIntentEngine()
     st.session_state.action_suite = ExecutionActionSuite()
 
-# --- 4. SESSION STATE VARIABLES ---
+# --- 4. SESSION STATE ---
 if 'df' not in st.session_state: st.session_state.df = None
 if 'chat_log' not in st.session_state: st.session_state.chat_log = []
 if 'undo_stack' not in st.session_state: st.session_state.undo_stack = []
 
-# --- 5. CORE FUNCTIONS ---
+# --- 5. FUNCTIONS ---
 
 def log_msg(sender, msg):
     timestamp = pd.Timestamp.now().strftime("%H:%M")
     icon = "🦇" if sender == "JEFF" else "👤" if sender == "USER" else "⚠️"
-    # Insert new message at the top
     entry = f"**{icon} [{timestamp}] {sender}:**\n\n{msg}\n\n---"
     st.session_state.chat_log.insert(0, entry)
 
@@ -115,9 +121,7 @@ def ingest_data():
 
     log_msg("JEFF", "Ingesting Data...")
     try:
-        st.session_state.undo_stack = [] # Reset undo history
-        
-        # --- EXECUTE PIPELINE ---
+        st.session_state.undo_stack = []
         df = st.session_state.ingestor.build_diagnostic_dataframe(raw_text)
         schema = SchemaInferenceEngine().infer(df)
         df = DataMaterializer().materialize(df, schema)
@@ -126,7 +130,6 @@ def ingest_data():
         st.session_state.df = df
         log_msg("JEFF", f"Data Materialized. {len(df)} rows found.")
         st.toast("Data Loaded Successfully", icon="✅")
-        
     except Exception as e:
         log_msg("ERROR", str(e))
         st.error(f"Ingest Failed: {e}")
@@ -147,25 +150,20 @@ def run_command():
         log_msg("JEFF", f"Unknown command. {suggestion}")
         return
 
-    # Snapshot for Undo
     st.session_state.undo_stack.append(st.session_state.df.copy())
 
     try:
-        # Web logic: Default to 'keep first' for dedupe to avoid blocking UI
         if intent["action"] == "dedupe" and "subset" not in intent["parameters"]:
              intent["parameters"]["keep"] = "first"
 
         new_df, result_msg = st.session_state.action_suite.execute(intent, st.session_state.df)
         st.session_state.df = new_df
         log_msg("JEFF", result_msg)
-        
-        # Clear input (Using session state assignment for reset)
         st.session_state["cmd_input_box"] = "" 
         
     except Exception as e:
         st.session_state.undo_stack.pop()
         log_msg("ERROR", str(e))
-        st.error(f"Execution Error: {e}")
 
 def undo_action():
     if st.session_state.undo_stack:
@@ -175,7 +173,6 @@ def undo_action():
     else:
         st.toast("Nothing to undo!", icon="🚫")
 
-
 # --- 6. SIDEBAR LOG ---
 with st.sidebar:
     st.header("📜 SESSION LOG")
@@ -183,60 +180,52 @@ with st.sidebar:
     for log_entry in st.session_state.chat_log:
         st.markdown(log_entry)
 
-
-# --- 7. MAIN LAYOUT (4 COLUMNS) ---
+# --- 7. MAIN LAYOUT ---
 st.title("🦇 JEFF DATA ANALYST")
 
-# Define columns: Input(1) | Actions(1) | Guide(1) | Output(2.5)
-col1, col2, col3, col4 = st.columns([1, 1, 1, 2.5], gap="small")
+col1, col2, col3, col4 = st.columns([1, 1, 1.2, 2.8], gap="small")
 
-# === COLUMN 1: INPUT ===
+# === COL 1: INPUT ===
 with col1:
     st.subheader("1. INPUT")
-    st.text_area("Raw Data:", height=250, key="raw_input_area", placeholder="Paste Excel/CSV content here...", label_visibility="collapsed")
+    st.text_area("Raw Data:", height=300, key="raw_input_area", placeholder="Paste Excel/CSV content here...", label_visibility="collapsed")
     st.button("⚡ INGEST", on_click=ingest_data)
 
-# === COLUMN 2: ACTIONS & SAVE ===
+# === COL 2: ACTIONS ===
 with col2:
     st.subheader("2. ACTION")
-    # Command Input
     st.text_input("Command:", key="cmd_input_box", placeholder="Type here...", label_visibility="collapsed", on_change=run_command)
-    
-    # Execution Buttons
     st.button("▶ EXECUTE", on_click=run_command)
     st.button("⏪ UNDO LAST", on_click=undo_action)
     
     st.divider()
     
-    # --- ROBUST SAVE LOGIC ---
-    # Only show if data exists. No toggle button needed.
+    # Save Logic
     if st.session_state.df is not None:
         st.markdown("**💾 Save File**")
         fname = st.text_input("Filename:", value="analysis", label_visibility="collapsed")
         
-        # Prepare the file in memory
         clean_df = st.session_state.df.loc[:, ~st.session_state.df.columns.str.startswith('_')]
         buffer = io.BytesIO()
         with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
             clean_df.to_excel(writer, index=False)
             
-        # The Download Button acts as the "Save" action
         st.download_button(
-            label="⬇️ DOWNLOAD EXCEL",
+            label="⬇️ DOWNLOAD",
             data=buffer,
             file_name=f"{fname}.xlsx",
             mime="application/vnd.ms-excel"
         )
     else:
-        # Disabled state
         st.button("💾 SAVE FILE", disabled=True)
 
-# === COLUMN 3: NEURAL GUIDE (HTML CARDS) ===
+# === COL 3: NEURAL GUIDE (FIXED) ===
 with col3:
     st.subheader("3. GUIDE")
     
+    # CRITICAL FIX: 'unsafe_allow_html=True' enabled here
     st.markdown("""
-    <div style="height: 400px; overflow-y: auto; padding-right: 5px;">
+    <div class="guide-container">
         
         <div class="guide-card">
             <div class="guide-title">🛠️ EDITING</div>
@@ -248,7 +237,7 @@ with col3:
             <div class="guide-title">🧹 CLEANING</div>
             <div class="guide-cmd">Fill missing in Age with 0</div>
             <div class="guide-cmd">Replace 'NY' with 'New York'</div>
-            <div class="guide-cmd">Dedupe</div>
+            <div class="guide-cmd">Dedupe (Removes duplicates)</div>
         </div>
 
         <div class="guide-card">
@@ -267,12 +256,11 @@ with col3:
         </div>
 
     </div>
-    """, unsafe_allow_html=True)
+    """, unsafe_allow_html=True) 
 
-# === COLUMN 4: OUTPUT (FILTERED) ===
+# === COL 4: OUTPUT ===
 with col4:
     if st.session_state.df is not None:
-        # Filter out internal columns starting with '_'
         clean_view = st.session_state.df.loc[:, ~st.session_state.df.columns.str.startswith('_')]
         rows, cols = clean_view.shape
         st.success(f"**ACTIVE DATA:** {rows} Rows | {cols} Columns")
