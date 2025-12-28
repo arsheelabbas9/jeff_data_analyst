@@ -18,85 +18,106 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. PREMIUM AESTHETIC CSS ---
+# --- 2. HYPER-POLISHED CSS ---
 st.markdown("""
 <style>
-    /* 1. Background & Reset */
-    .stApp { background-color: #0E1117; }
+    /* 1. GLOBAL RESET & THEME */
+    .stApp { background-color: #0b0e11; } /* Darker, richer background */
     #MainMenu, footer, header { visibility: hidden; }
     
-    /* 2. Glass Cards (Uniform Height & Look) */
+    /* 2. GLASS CONTAINERS (The "Cards") */
     div[data-testid="stVerticalBlock"] > div[data-testid="stVerticalBlockBorderWrapper"] {
-        background-color: #161920;
-        border: 1px solid #30333d;
-        border-radius: 12px; /* Softer corners */
-        padding: 20px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        background-color: #151921;
+        border: 1px solid #2a2e35;
+        border-radius: 10px;
+        padding: 18px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
     }
 
-    /* 3. Typography (Clean & Modern) */
+    /* 3. TYPOGRAPHY */
     h1 { 
         font-family: 'Impact', sans-serif !important; 
         color: #3b8ed0 !important; 
-        font-size: 36px !important; 
-        margin: 0 0 10px 0 !important; 
-        text-shadow: 0 0 15px rgba(59, 142, 208, 0.3);
+        font-size: 34px !important; 
+        text-shadow: 0 0 10px rgba(59, 142, 208, 0.4);
+        margin-bottom: 5px !important;
     }
     h3 { 
         font-family: 'Roboto', sans-serif !important; 
-        font-size: 14px !important; 
-        font-weight: 800 !important; 
-        color: #888 !important; 
+        font-size: 13px !important; 
+        font-weight: 900 !important; 
+        color: #6c757d !important; 
         text-transform: uppercase; 
-        letter-spacing: 2px;
-        margin-bottom: 15px !important;
+        letter-spacing: 1.5px;
+        margin-bottom: 12px !important;
     }
     
-    /* 4. MASSIVE INPUT BOX */
+    /* 4. CINEMATIC INPUT BOX (The Fix) */
     .stTextArea textarea {
-        background-color: #0e1117 !important;
-        color: #e0e0e0 !important;
+        background-color: #080a0c !important; /* Very dark contrast */
+        color: #a6e22e !important; /* Matrix/Code Green text */
         border: 1px solid #333 !important;
         font-family: 'Consolas', monospace !important;
-        border-radius: 8px;
-        min-height: 700px !important; /* Huge height */
-        font-size: 11px !important;
+        border-radius: 6px;
+        min-height: 450px !important;
+        font-size: 12px !important;
         resize: none;
+        transition: border-color 0.3s;
+    }
+    .stTextArea textarea:focus {
+        border-color: #3b8ed0 !important; /* Blue glow on focus */
+        box-shadow: 0 0 10px rgba(59, 142, 208, 0.2);
     }
 
-    /* 5. Cyber Blue Buttons */
+    /* 5. CUSTOM TABS (The "Ugly" Fix) */
+    /* Tab Bar Background */
+    .stTabs [data-baseweb="tab-list"] {
+        background-color: transparent;
+        gap: 8px;
+        border-bottom: 1px solid #2a2e35;
+        padding-bottom: 0px;
+    }
+    /* Inactive Tab */
+    .stTabs [data-baseweb="tab"] {
+        height: 35px;
+        background-color: transparent;
+        color: #555;
+        font-size: 11px;
+        font-weight: 700;
+        border: none;
+        padding: 0 10px;
+    }
+    /* Active Tab (The Clean Blue Look) */
+    .stTabs [data-baseweb="tab"][aria-selected="true"] {
+        color: #3b8ed0;
+        background-color: transparent;
+        border-bottom: 2px solid #3b8ed0; /* The Blue Underline */
+    }
+    /* Hover Effect */
+    .stTabs [data-baseweb="tab"]:hover {
+        color: #3b8ed0;
+    }
+
+    /* 6. BUTTONS (Standardized) */
     div.stButton > button {
-        width: 100%; border-radius: 8px; font-weight: 700; font-size: 12px; text-transform: uppercase;
+        width: 100%; border-radius: 6px; font-weight: 700; font-size: 12px;
         background-color: #1f232d; color: #3b8ed0; border: 1px solid #3b8ed0;
-        transition: all 0.2s; height: 42px; letter-spacing: 1px;
+        transition: all 0.2s; height: 38px; text-transform: uppercase;
     }
     div.stButton > button:hover { 
         background-color: #3b8ed0; color: white; 
-        box-shadow: 0 0 15px rgba(59, 142, 208, 0.5); 
-        transform: translateY(-1px);
-    }
-    
-    /* 6. Guide Details Styling */
-    .cmd-box {
-        margin-bottom: 12px;
-        border-bottom: 1px solid #222;
-        padding-bottom: 8px;
-    }
-    .cmd-title {
-        color: #fff; font-weight: bold; font-size: 12px; margin-bottom: 4px; display: block;
-    }
-    .cmd-desc {
-        color: #666; font-size: 10px; font-style: italic; margin-bottom: 6px; display: block;
-    }
-    .cmd-code {
-        font-family: 'Consolas', monospace; color: #a6e22e; background: #0e1117;
-        padding: 4px 8px; border-radius: 4px; border: 1px solid #333; font-size: 11px;
+        box-shadow: 0 0 10px rgba(59, 142, 208, 0.5); 
     }
 
-    /* 7. Tabs Customization */
-    .stTabs [data-baseweb="tab-list"] { background-color: #161920; gap: 5px; }
-    .stTabs [data-baseweb="tab"] { height: 35px; background-color: #0e1117; border-radius: 6px 6px 0 0; color: #666; font-size: 11px; font-weight: bold; border: 1px solid #222; border-bottom: none; }
-    .stTabs [data-baseweb="tab"][aria-selected="true"] { color: #3b8ed0; background-color: #1c1f26; border-top: 2px solid #3b8ed0; }
+    /* 7. GUIDE CONTENT STYLING */
+    .cmd-box { margin-bottom: 10px; border-left: 2px solid #333; padding-left: 10px; }
+    .cmd-title { color: #ddd; font-weight: bold; font-size: 12px; display: block; }
+    .cmd-desc { color: #666; font-size: 10px; font-style: italic; margin-bottom: 4px; display: block; }
+    .cmd-code { 
+        font-family: 'Consolas', monospace; color: #a6e22e; 
+        background: #080a0c; padding: 2px 6px; border-radius: 4px; 
+        border: 1px solid #222; font-size: 10px; 
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -179,14 +200,13 @@ with st.sidebar:
 # --- 7. MAIN LAYOUT ---
 st.title("🦇 JEFF DATA ANALYST")
 
-c1, c2, c3, c4 = st.columns([1, 1, 1.3, 3], gap="small")
+c1, c2, c3, c4 = st.columns([1.3, 1, 1.3, 3], gap="small")
 
 # === CARD 1: INPUT ===
 with c1:
     with st.container(border=True):
         st.markdown("### INPUT")
-        # CSS forces min-height: 700px
-        st.text_area("Data", height=700, key="raw_input_area", placeholder="Paste Excel/CSV...", label_visibility="collapsed")
+        st.text_area("Data", height=450, key="raw_input_area", placeholder="Paste Excel/CSV...", label_visibility="collapsed")
         st.button("⚡ LOAD DATA", on_click=ingest_data)
 
 # === CARD 2: CONTROLS ===
@@ -210,88 +230,34 @@ with c2:
         else:
             st.button("⬇️ DOWNLOAD", disabled=True)
 
-# === CARD 3: DETAILED NEURAL GUIDE ===
+# === CARD 3: GUIDE (POLISHED TABS) ===
 with c3:
     with st.container(border=True):
         st.markdown("### GUIDE")
         
-        # TABBED INTERFACE for Organization
         t1, t2, t3, t4 = st.tabs(["EDIT", "CLEAN", "STRUCT", "DATA"])
         
-        with t1: # Editing
+        with t1:
             st.markdown("""
-            <div class="cmd-box">
-                <span class="cmd-title">Update Cell Value</span>
-                <span class="cmd-desc">Change a specific value based on ID or criteria.</span>
-                <div class="cmd-code">Update Salary to 5000 where ID is 1</div>
-            </div>
-            <div class="cmd-box">
-                <span class="cmd-title">Update by Row Index</span>
-                <span class="cmd-desc">Surgical edit using the row number (0, 1, 2...).</span>
-                <div class="cmd-code">Update Row 5 Name to Batman</div>
-            </div>
+            <div class="cmd-box"><span class="cmd-title">Update Cell</span><span class="cmd-desc">Change specific value.</span><div class="cmd-code">Update Salary to 5000 where ID is 1</div></div>
+            <div class="cmd-box"><span class="cmd-title">Update Row</span><span class="cmd-desc">Edit by row number.</span><div class="cmd-code">Update Row 5 Name to Batman</div></div>
             """, unsafe_allow_html=True)
-
-        with t2: # Cleaning
+        with t2:
             st.markdown("""
-            <div class="cmd-box">
-                <span class="cmd-title">Fill Missing Data</span>
-                <span class="cmd-desc">Replace empty/null cells with a safe default.</span>
-                <div class="cmd-code">Fill missing in Age with 0</div>
-            </div>
-            <div class="cmd-box">
-                <span class="cmd-title">Global Replace</span>
-                <span class="cmd-desc">Find and replace text across the entire dataset.</span>
-                <div class="cmd-code">Replace 'NY' with 'New York'</div>
-            </div>
-            <div class="cmd-box">
-                <span class="cmd-title">Deduplication</span>
-                <span class="cmd-desc">Remove identical rows to clean up data.</span>
-                <div class="cmd-code">Dedupe</div>
-            </div>
+            <div class="cmd-box"><span class="cmd-title">Fill Missing</span><span class="cmd-desc">Fix empty cells.</span><div class="cmd-code">Fill missing in Age with 0</div></div>
+            <div class="cmd-box"><span class="cmd-title">Replace</span><span class="cmd-desc">Global text replace.</span><div class="cmd-code">Replace 'NY' with 'New York'</div></div>
+            <div class="cmd-box"><span class="cmd-title">Dedupe</span><span class="cmd-desc">Remove duplicates.</span><div class="cmd-code">Dedupe</div></div>
             """, unsafe_allow_html=True)
-
-        with t3: # Structure
+        with t3:
             st.markdown("""
-            <div class="cmd-box">
-                <span class="cmd-title">Rename Column</span>
-                <span class="cmd-desc">Change headers to be more readable.</span>
-                <div class="cmd-code">Rename 'Old_Name' to 'New_Name'</div>
-            </div>
-            <div class="cmd-box">
-                <span class="cmd-title">Delete Row</span>
-                <span class="cmd-desc">Remove a specific row by its index number.</span>
-                <div class="cmd-code">Delete Row 5</div>
-            </div>
-            <div class="cmd-box">
-                <span class="cmd-title">Delete Column</span>
-                <span class="cmd-desc">Remove an entire column permanently.</span>
-                <div class="cmd-code">Delete Column 'Tax'</div>
-            </div>
+            <div class="cmd-box"><span class="cmd-title">Rename</span><span class="cmd-desc">Change column headers.</span><div class="cmd-code">Rename 'Old' to 'New'</div></div>
+            <div class="cmd-box"><span class="cmd-title">Delete Row</span><span class="cmd-desc">Remove row by index.</span><div class="cmd-code">Delete Row 5</div></div>
             """, unsafe_allow_html=True)
-
-        with t4: # Analysis
+        with t4:
             st.markdown("""
-            <div class="cmd-box">
-                <span class="cmd-title">Pivot / Grouping</span>
-                <span class="cmd-desc">Aggregate data to find totals or counts.</span>
-                <div class="cmd-code">Group by City sum Sales</div>
-            </div>
-            <div class="cmd-box">
-                <span class="cmd-title">Quick Statistics</span>
-                <span class="cmd-desc">Get Mean, Median, Max, and Min instantly.</span>
-                <div class="cmd-code">Analyze Salary</div>
-            </div>
-            <div class="cmd-box">
-                <span class="cmd-title">Filtering</span>
-                <span class="cmd-desc">Isolate specific data rows.</span>
-                <div class="cmd-code">Filter Age > 25</div>
-            </div>
-             <div class="cmd-box">
-                <span class="cmd-title">Sorting</span>
-                <span class="cmd-desc">Order data Ascending or Descending.</span>
-                <div class="cmd-code">Sort by Date Desc</div>
-            </div>
+            <div class="cmd-box"><span class="cmd-title">Pivot/Group</span><span class="cmd-desc">Aggregate data.</span><div class="cmd-code">Group by City sum Sales</div></div>
+            <div class="cmd-box"><span class="cmd-title">Stats</span><span class="cmd-desc">Quick statistics.</span><div class="cmd-code">Analyze Salary</div></div>
+            <div class="cmd-box"><span class="cmd-title">Sort/Filter</span><span class="cmd-desc">Organize view.</span><div class="cmd-code">Filter Age > 25</div></div>
             """, unsafe_allow_html=True)
 
 # === CARD 4: MONITOR ===
