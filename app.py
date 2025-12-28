@@ -16,27 +16,35 @@ st.set_page_config(
     page_title="Jeff Data Analyst",
     page_icon="🦇",
     layout="wide",
-    initial_sidebar_state="collapsed" # This hides the Session Log menu by default
+    initial_sidebar_state="collapsed"
 )
 
-# --- 2. CSS STYLING ---
+# --- 2. CSS STYLING (Blue Buttons & Layout) ---
 st.markdown("""
 <style>
     .stApp { background-color: #0e1117; }
-    h1, h2, h3 { font-family: 'Impact', sans-serif !important; color: #3b8ed0 !important; letter-spacing: 1px; }
+    h1, h2, h3, h4 { font-family: 'Impact', sans-serif !important; color: #3b8ed0 !important; letter-spacing: 1px; }
     .stTextInput, .stTextArea, .stButton { font-family: 'Roboto', sans-serif !important; }
     .stDataFrame { font-family: 'Consolas', monospace !important; }
     
-    /* Button Styling */
+    /* Force ALL Buttons to Blue Tone */
     div.stButton > button {
         width: 100%;
         border-radius: 4px;
         font-weight: bold;
+        background-color: #0e1117;
+        color: #3b8ed0;
         border: 1px solid #3b8ed0;
     }
     div.stButton > button:hover {
-        border-color: white;
-        color: #3b8ed0;
+        background-color: #3b8ed0;
+        color: white;
+        border-color: #3b8ed0;
+    }
+    /* Primary Buttons (Filled Blue) */
+    div.stButton > button:active {
+        background-color: #2a6fa8;
+        color: white;
     }
     
     /* Success/Error Messages */
@@ -55,15 +63,13 @@ if 'engines_loaded' not in st.session_state:
 if 'df' not in st.session_state: st.session_state.df = None
 if 'chat_log' not in st.session_state: st.session_state.chat_log = []
 if 'undo_stack' not in st.session_state: st.session_state.undo_stack = []
+if 'save_mode' not in st.session_state: st.session_state.save_mode = False
 
 # --- 5. FUNCTIONS ---
 
-def log_msg(sender, msg, type="info"):
+def log_msg(sender, msg):
     timestamp = pd.Timestamp.now().strftime("%H:%M")
     icon = "🦇" if sender == "JEFF" else "👤" if sender == "USER" else "⚠️"
-    color = "#3b8ed0" if sender == "JEFF" else "#2ecc71" if sender == "USER" else "#e74c3c"
-    
-    # Simple markdown log for the sidebar
     entry = f"**{icon} [{timestamp}] {sender}:**\n\n{msg}\n\n---"
     st.session_state.chat_log.insert(0, entry)
 
@@ -110,7 +116,6 @@ def run_command():
     if intent["action"] == "unknown":
         suggestion = intent['suggestions'][0] if intent['suggestions'] else "Try 'Sort by Salary'"
         log_msg("JEFF", f"Unknown command. {suggestion}")
-        st.toast("Unknown Command", icon="❓")
         return
 
     st.session_state.undo_stack.append(st.session_state.df.copy())
@@ -127,113 +132,96 @@ def run_command():
     except Exception as e:
         st.session_state.undo_stack.pop()
         log_msg("ERROR", str(e))
-        st.toast("Execution Failed", icon="❌")
 
-# --- 6. SIDEBAR (THE "MENU" BUTTON) ---
+def toggle_save():
+    st.session_state.save_mode = not st.session_state.save_mode
+
+# --- 6. SIDEBAR LOG ---
 with st.sidebar:
     st.header("📜 SESSION LOG")
-    st.markdown("Here is the history of your current analysis session.")
     st.divider()
-    # Display logs in the sidebar menu
     for log_entry in st.session_state.chat_log:
         st.markdown(log_entry)
 
-# --- 7. MAIN LAYOUT (TRI-COLUMN) ---
+# --- 7. MAIN LAYOUT (4 COLUMNS) ---
 st.title("🦇 JEFF DATA ANALYST")
 
-# Define Columns: Input (1) | Command (1) | Output (2)
-col_input, col_cmd, col_output = st.columns([1, 1, 2], gap="medium")
+# Columns: Input (1) | Command (1) | Guide (1) | Output (2.5)
+col1, col2, col3, col4 = st.columns([1, 1, 1, 2.5], gap="small")
 
-# === COLUMN 1: INPUT DECK ===
-with col_input:
-    st.subheader("1. SOURCE")
-    st.text_area(
-        "Raw Data Input:", 
-        height=300, 
-        key="raw_input_area",
-        placeholder="Copy from Excel/CSV and paste here...",
-        label_visibility="collapsed"
-    )
-    st.button("⚡ INGEST DATA", on_click=ingest_data, type="primary")
-    
-    st.info("ℹ️ **Tip:** Paste raw data including headers. Jeff will auto-detect the structure.")
+# === COL 1: INPUT ===
+with col1:
+    st.subheader("1. INPUT")
+    st.text_area("Raw Data:", height=400, key="raw_input_area", placeholder="Paste Excel/CSV...", label_visibility="collapsed")
+    st.button("⚡ INGEST", on_click=ingest_data)
 
-# === COLUMN 2: COMMAND CENTER ===
-with col_cmd:
-    st.subheader("2. ACTIONS")
+# === COL 2: ACTIONS ===
+with col2:
+    st.subheader("2. ACTION")
+    st.text_input("Command:", key="cmd_input_box", placeholder="Type here...", label_visibility="collapsed", on_change=run_command)
     
-    # Command Input
-    st.text_input(
-        "Command:", 
-        key="cmd_input_box", 
-        placeholder="Type command here...",
-        label_visibility="collapsed",
-        on_change=run_command
-    )
+    st.button("▶ EXECUTE", on_click=run_command)
+    st.button("⏪ UNDO LAST", on_click=undo_action)
     
-    # Action Buttons
-    c1, c2 = st.columns(2)
-    with c1: st.button("▶ EXECUTE", on_click=run_command)
-    with c2: st.button("⏪ UNDO", on_click=undo_action)
+    # Save Logic
+    if st.button("💾 SAVE FILE"):
+        toggle_save()
+        
+    if st.session_state.save_mode and st.session_state.df is not None:
+        fname = st.text_input("Filename:", value="analysis")
+        # Check happens on download logic
+        if fname:
+            final_name = f"{fname}.xlsx"
+            buffer = io.BytesIO()
+            # Clean internal columns before save
+            clean_df = st.session_state.df.loc[:, ~st.session_state.df.columns.str.startswith('_')]
+            with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
+                clean_df.to_excel(writer, index=False)
+            
+            st.download_button(
+                label=f"⬇️ Download {final_name}",
+                data=buffer,
+                file_name=final_name,
+                mime="application/vnd.ms-excel"
+            )
+
+# === COL 3: NEURAL GUIDE ===
+with col3:
+    st.subheader("3. GUIDE")
+    st.markdown("""
+    <div style='font-size: 12px; color: #aaa; border: 1px solid #333; padding: 10px; border-radius: 5px; height: 400px; overflow-y: auto;'>
     
+    <b>🛠️ EDITING</b><br>
+    Update Row 5 Name to Batman<br>
+    Update Salary to 5000 where ID is 1<br><br>
+    
+    <b>🧹 CLEANING</b><br>
+    Fill missing in Age with 0<br>
+    Replace 'NY' with 'New York'<br>
+    Dedupe (Removes duplicates)<br><br>
+    
+    <b>🏷️ STRUCTURE</b><br>
+    Rename 'Old' to 'New'<br>
+    Delete Row 5<br>
+    Delete Column 'Tax'<br><br>
+    
+    <b>📊 ANALYSIS</b><br>
+    Group by City sum Sales<br>
+    Analyze Salary<br>
+    Filter Age > 25<br>
+    Sort by Date Desc<br>
+    Plot Age
+    </div>
+    """, unsafe_allow_html=True)
+
+# === COL 4: OUTPUT ===
+with col4:
     if st.session_state.df is not None:
-        buffer = io.BytesIO()
-        with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-            st.session_state.df.to_excel(writer, index=False)
-        st.download_button("💾 DOWNLOAD", data=buffer, file_name="analysis.xlsx", mime="application/vnd.ms-excel")
-    else:
-        st.button("💾 DOWNLOAD", disabled=True)
-
-    st.divider()
-
-    # Detailed Cheat Sheet
-    st.markdown("#### 🧠 NEURAL GUIDE")
-    
-    with st.expander("🛠️ EDITING & CLEANING", expanded=True):
-        st.markdown("""
-        **Update Values:**
-        * `Update Salary to 5000 where ID is 1`
-        * `Update Row 5 Name to Batman`
-        
-        **Cleaning:**
-        * `Fill missing in Age with 0`
-        * `Replace 'NY' with 'New York'`
-        * `Dedupe` (Removes duplicates)
-        
-        **Structure:**
-        * `Rename 'Old' to 'New'`
-        * `Delete Row 5`
-        * `Delete Column 'Tax'`
-        """)
-        
-    with st.expander("📊 ANALYSIS & VISUALS", expanded=True):
-        st.markdown("""
-        **Pivot / Grouping:**
-        * `Group by City sum Sales`
-        * `Group by Dept count ID`
-        
-        **Statistics:**
-        * `Analyze Salary` (Mean, Max, Min)
-        
-        **Sorting & Filtering:**
-        * `Sort by Date Desc`
-        * `Filter Age > 25`
-        
-        **Charts:**
-        * `Plot Age` (Histogram/Bar)
-        """)
-
-# === COLUMN 3: LIVE OUTPUT ===
-with col_output:
-    if st.session_state.df is not None:
-        rows, cols = st.session_state.df.shape
-        st.success(f"**STATUS: ACTIVE** | {rows} Rows | {cols} Columns")
-        st.dataframe(st.session_state.df, height=750, use_container_width=True)
+        # Hide internal columns
+        clean_view = st.session_state.df.loc[:, ~st.session_state.df.columns.str.startswith('_')]
+        rows, cols = clean_view.shape
+        st.success(f"**ACTIVE DATA:** {rows} Rows | {cols} Columns")
+        st.dataframe(clean_view, height=750, use_container_width=True)
     else:
         st.warning("WAITING FOR DATA...")
-        st.markdown("""
-        <div style='text-align: center; color: #555; padding-top: 100px;'>
-            <h3>NO DATA LOADED</h3>
-            <p>Paste data in Column 1 to begin.</p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("<br><br><center><h3>NO DATA</h3></center>", unsafe_allow_html=True)
