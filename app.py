@@ -18,88 +18,85 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. AESTHETIC CSS ---
+# --- 2. PREMIUM AESTHETIC CSS ---
 st.markdown("""
 <style>
-    /* 1. Main Background */
+    /* 1. Background & Reset */
     .stApp { background-color: #0E1117; }
-    
-    /* 2. Hide Bloat */
     #MainMenu, footer, header { visibility: hidden; }
     
-    /* 3. Glass Card Containers */
+    /* 2. Glass Cards (Uniform Height & Look) */
     div[data-testid="stVerticalBlock"] > div[data-testid="stVerticalBlockBorderWrapper"] {
         background-color: #161920;
         border: 1px solid #30333d;
-        border-radius: 10px;
-        padding: 15px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        border-radius: 12px; /* Softer corners */
+        padding: 20px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     }
 
-    /* 4. Typography */
-    h1 { font-family: 'Impact', sans-serif !important; color: #3b8ed0 !important; font-size: 32px !important; margin: 0 !important; }
-    h3 { font-family: 'Roboto', sans-serif !important; font-size: 14px !important; color: #888 !important; text-transform: uppercase; margin: 0 !important; letter-spacing: 1px; }
+    /* 3. Typography (Clean & Modern) */
+    h1 { 
+        font-family: 'Impact', sans-serif !important; 
+        color: #3b8ed0 !important; 
+        font-size: 36px !important; 
+        margin: 0 0 10px 0 !important; 
+        text-shadow: 0 0 15px rgba(59, 142, 208, 0.3);
+    }
+    h3 { 
+        font-family: 'Roboto', sans-serif !important; 
+        font-size: 14px !important; 
+        font-weight: 800 !important; 
+        color: #888 !important; 
+        text-transform: uppercase; 
+        letter-spacing: 2px;
+        margin-bottom: 15px !important;
+    }
     
-    /* 5. Blue Buttons */
-    div.stButton > button {
-        width: 100%; border-radius: 6px; font-weight: 600; font-size: 13px;
-        background-color: #1f232d; color: #3b8ed0; border: 1px solid #3b8ed0;
-        transition: all 0.2s; height: 38px;
-    }
-    div.stButton > button:hover { background-color: #3b8ed0; color: white; box-shadow: 0 0 12px rgba(59, 142, 208, 0.6); }
-
-    /* 6. THICKER INPUT BOX (The Request) */
+    /* 4. MASSIVE INPUT BOX */
     .stTextArea textarea {
         background-color: #0e1117 !important;
         color: #e0e0e0 !important;
         border: 1px solid #333 !important;
         font-family: 'Consolas', monospace !important;
-        border-radius: 5px;
-        min-height: 550px !important; /* Forces it to be very tall */
+        border-radius: 8px;
+        min-height: 700px !important; /* Huge height */
+        font-size: 11px !important;
         resize: none;
     }
 
-    /* 7. TAB STYLING (The Horizontal Headers) */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 2px;
-        background-color: #161920;
-        border-bottom: 1px solid #333;
+    /* 5. Cyber Blue Buttons */
+    div.stButton > button {
+        width: 100%; border-radius: 8px; font-weight: 700; font-size: 12px; text-transform: uppercase;
+        background-color: #1f232d; color: #3b8ed0; border: 1px solid #3b8ed0;
+        transition: all 0.2s; height: 42px; letter-spacing: 1px;
     }
-    .stTabs [data-baseweb="tab"] {
-        height: 40px;
-        white-space: pre-wrap;
-        background-color: #0e1117;
-        border-radius: 4px 4px 0px 0px;
-        color: #888;
-        font-size: 12px;
-        font-weight: bold;
+    div.stButton > button:hover { 
+        background-color: #3b8ed0; color: white; 
+        box-shadow: 0 0 15px rgba(59, 142, 208, 0.5); 
+        transform: translateY(-1px);
     }
-    .stTabs [data-baseweb="tab"]:hover {
-        color: #3b8ed0;
-        background-color: #1c1f26;
+    
+    /* 6. Guide Details Styling */
+    .cmd-box {
+        margin-bottom: 12px;
+        border-bottom: 1px solid #222;
+        padding-bottom: 8px;
     }
-    .stTabs [data-baseweb="tab"][aria-selected="true"] {
-        background-color: #1c1f26;
-        color: #3b8ed0;
-        border-top: 2px solid #3b8ed0;
+    .cmd-title {
+        color: #fff; font-weight: bold; font-size: 12px; margin-bottom: 4px; display: block;
+    }
+    .cmd-desc {
+        color: #666; font-size: 10px; font-style: italic; margin-bottom: 6px; display: block;
+    }
+    .cmd-code {
+        font-family: 'Consolas', monospace; color: #a6e22e; background: #0e1117;
+        padding: 4px 8px; border-radius: 4px; border: 1px solid #333; font-size: 11px;
     }
 
-    /* 8. FLASHCARD CONTENT Styling */
-    .flashcard {
-        background-color: #0e1117;
-        border: 1px solid #333;
-        border-radius: 6px;
-        padding: 15px;
-        margin-top: 10px;
-        height: 480px; /* Fixed height to match layout */
-    }
-    code {
-        color: #a6e22e !important;
-        background-color: #161920 !important;
-        font-family: 'Consolas', monospace !important;
-        font-size: 11px !important;
-        border: 1px solid #333;
-    }
+    /* 7. Tabs Customization */
+    .stTabs [data-baseweb="tab-list"] { background-color: #161920; gap: 5px; }
+    .stTabs [data-baseweb="tab"] { height: 35px; background-color: #0e1117; border-radius: 6px 6px 0 0; color: #666; font-size: 11px; font-weight: bold; border: 1px solid #222; border-bottom: none; }
+    .stTabs [data-baseweb="tab"][aria-selected="true"] { color: #3b8ed0; background-color: #1c1f26; border-top: 2px solid #3b8ed0; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -174,28 +171,28 @@ def undo_action():
 
 # --- 6. SIDEBAR LOG ---
 with st.sidebar:
-    st.subheader("📜 SESSION LOG")
+    st.subheader("SESSION LOG")
     st.divider()
     for log_entry in st.session_state.chat_log:
         st.markdown(log_entry)
 
-# --- 7. MAIN LAYOUT (4-COLUMN) ---
+# --- 7. MAIN LAYOUT ---
 st.title("🦇 JEFF DATA ANALYST")
 
-c1, c2, c3, c4 = st.columns([1, 1, 1.2, 3], gap="small")
+c1, c2, c3, c4 = st.columns([1, 1, 1.3, 3], gap="small")
 
-# === CARD 1: INPUT (MAXIMIZED) ===
+# === CARD 1: INPUT ===
 with c1:
     with st.container(border=True):
-        st.markdown("### 1. INPUT")
-        # CSS forces min-height: 550px
-        st.text_area("Data", height=600, key="raw_input_area", placeholder="Paste Excel/CSV...", label_visibility="collapsed")
+        st.markdown("### INPUT")
+        # CSS forces min-height: 700px
+        st.text_area("Data", height=700, key="raw_input_area", placeholder="Paste Excel/CSV...", label_visibility="collapsed")
         st.button("⚡ LOAD DATA", on_click=ingest_data)
 
 # === CARD 2: CONTROLS ===
 with c2:
     with st.container(border=True):
-        st.markdown("### 2. CONTROL")
+        st.markdown("### CONTROL")
         st.text_input("Cmd", key="cmd_input_box", placeholder="Type Command...", label_visibility="collapsed", on_change=run_command)
         
         st.button("▶ EXECUTE", on_click=run_command)
@@ -213,38 +210,89 @@ with c2:
         else:
             st.button("⬇️ DOWNLOAD", disabled=True)
 
-# === CARD 3: TABBED FLASHCARDS ===
+# === CARD 3: DETAILED NEURAL GUIDE ===
 with c3:
     with st.container(border=True):
-        st.markdown("### 3. GUIDE")
+        st.markdown("### GUIDE")
         
-        # This creates the Horizontal Heading Line
-        tab1, tab2, tab3, tab4 = st.tabs(["EDIT", "CLEAN", "STRUCT", "DATA"])
+        # TABBED INTERFACE for Organization
+        t1, t2, t3, t4 = st.tabs(["EDIT", "CLEAN", "STRUCT", "DATA"])
         
-        # FLASHCARD CONTENT
-        with tab1: # Editing
-            st.caption("MODIFY VALUES")
-            st.markdown("`Update Salary to 5000 where ID is 1`")
-            st.markdown("`Update Row 5 Name to Batman`")
-            
-        with tab2: # Cleaning
-            st.caption("FIX ISSUES")
-            st.markdown("`Fill missing in Age with 0`")
-            st.markdown("`Replace 'NY' with 'New York'`")
-            st.markdown("`Dedupe` (Remove duplicates)")
-            
-        with tab3: # Structure
-            st.caption("ORGANIZE")
-            st.markdown("`Rename 'Old' to 'New'`")
-            st.markdown("`Delete Row 5`")
-            st.markdown("`Delete Column 'Tax'`")
-            
-        with tab4: # Analysis
-            st.caption("INSIGHTS")
-            st.markdown("`Group by City sum Sales`")
-            st.markdown("`Analyze Salary`")
-            st.markdown("`Sort by Date Desc`")
-            st.markdown("`Plot Age`")
+        with t1: # Editing
+            st.markdown("""
+            <div class="cmd-box">
+                <span class="cmd-title">Update Cell Value</span>
+                <span class="cmd-desc">Change a specific value based on ID or criteria.</span>
+                <div class="cmd-code">Update Salary to 5000 where ID is 1</div>
+            </div>
+            <div class="cmd-box">
+                <span class="cmd-title">Update by Row Index</span>
+                <span class="cmd-desc">Surgical edit using the row number (0, 1, 2...).</span>
+                <div class="cmd-code">Update Row 5 Name to Batman</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        with t2: # Cleaning
+            st.markdown("""
+            <div class="cmd-box">
+                <span class="cmd-title">Fill Missing Data</span>
+                <span class="cmd-desc">Replace empty/null cells with a safe default.</span>
+                <div class="cmd-code">Fill missing in Age with 0</div>
+            </div>
+            <div class="cmd-box">
+                <span class="cmd-title">Global Replace</span>
+                <span class="cmd-desc">Find and replace text across the entire dataset.</span>
+                <div class="cmd-code">Replace 'NY' with 'New York'</div>
+            </div>
+            <div class="cmd-box">
+                <span class="cmd-title">Deduplication</span>
+                <span class="cmd-desc">Remove identical rows to clean up data.</span>
+                <div class="cmd-code">Dedupe</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        with t3: # Structure
+            st.markdown("""
+            <div class="cmd-box">
+                <span class="cmd-title">Rename Column</span>
+                <span class="cmd-desc">Change headers to be more readable.</span>
+                <div class="cmd-code">Rename 'Old_Name' to 'New_Name'</div>
+            </div>
+            <div class="cmd-box">
+                <span class="cmd-title">Delete Row</span>
+                <span class="cmd-desc">Remove a specific row by its index number.</span>
+                <div class="cmd-code">Delete Row 5</div>
+            </div>
+            <div class="cmd-box">
+                <span class="cmd-title">Delete Column</span>
+                <span class="cmd-desc">Remove an entire column permanently.</span>
+                <div class="cmd-code">Delete Column 'Tax'</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        with t4: # Analysis
+            st.markdown("""
+            <div class="cmd-box">
+                <span class="cmd-title">Pivot / Grouping</span>
+                <span class="cmd-desc">Aggregate data to find totals or counts.</span>
+                <div class="cmd-code">Group by City sum Sales</div>
+            </div>
+            <div class="cmd-box">
+                <span class="cmd-title">Quick Statistics</span>
+                <span class="cmd-desc">Get Mean, Median, Max, and Min instantly.</span>
+                <div class="cmd-code">Analyze Salary</div>
+            </div>
+            <div class="cmd-box">
+                <span class="cmd-title">Filtering</span>
+                <span class="cmd-desc">Isolate specific data rows.</span>
+                <div class="cmd-code">Filter Age > 25</div>
+            </div>
+             <div class="cmd-box">
+                <span class="cmd-title">Sorting</span>
+                <span class="cmd-desc">Order data Ascending or Descending.</span>
+                <div class="cmd-code">Sort by Date Desc</div>
+            </div>
+            """, unsafe_allow_html=True)
 
 # === CARD 4: MONITOR ===
 with c4:
@@ -253,8 +301,8 @@ with c4:
             clean_view = st.session_state.df.loc[:, ~st.session_state.df.columns.str.startswith('_')]
             rows, cols = clean_view.shape
             st.markdown(f"<h3 style='color:#3b8ed0 !important; margin-bottom: 10px;'>ACTIVE DATA: {rows} ROWS | {cols} COLS</h3>", unsafe_allow_html=True)
-            st.dataframe(clean_view, height=650, use_container_width=True)
+            st.dataframe(clean_view, height=750, use_container_width=True)
         else:
             st.markdown("### MONITOR")
             st.info("WAITING FOR SIGNAL...")
-            st.markdown("<br><br><br><center><h4 style='color:#333;'>NO DATA LOADED</h4></center><br><br><br>", unsafe_allow_html=True)
+            st.markdown("<br><br><br><br><center><h4 style='color:#333;'>NO DATA LOADED</h4></center><br><br><br>", unsafe_allow_html=True)
