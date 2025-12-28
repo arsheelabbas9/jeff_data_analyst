@@ -19,101 +19,119 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. CSS STYLING (COMPACT COMMAND CENTER) ---
+# --- 2. AESTHETIC CSS (THE "GLASS" THEME) ---
 st.markdown("""
 <style>
-    /* 1. Remove Top White Space (Crucial for Single View) */
-    .block-container {
-        padding-top: 1rem !important;
-        padding-bottom: 0rem !important;
-        max-width: 98% !important;
+    /* 1. Main Background - Deep Space Dark */
+    .stApp {
+        background-color: #0E1117;
     }
-    header { visibility: hidden; }
-    footer { visibility: hidden; }
 
-    /* 2. Global Dark Theme */
-    .stApp { background-color: #0e1117; }
+    /* 2. Hide Streamlit Bloat */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
     
-    /* 3. Typography */
-    h1 { font-family: 'Impact', sans-serif !important; color: #3b8ed0 !important; font-size: 28px !important; margin-bottom: 0px !important; }
-    h3 { font-family: 'Roboto', sans-serif !important; font-size: 16px !important; color: #888 !important; text-transform: uppercase; margin-top: 0px !important; }
-    p, label, .stMarkdown, .stTextInput { font-family: 'Roboto', sans-serif !important; font-size: 13px !important; }
-    .stDataFrame { font-family: 'Consolas', monospace !important; font-size: 12px !important; }
-
-    /* 4. Inputs & Buttons (Compact) */
-    textarea {
-        font-family: 'Consolas', monospace !important;
-        resize: none !important; /* Fixed size to prevent layout breaking */
-        font-size: 11px !important;
-        border: 1px solid #333 !important;
-        background-color: #161920 !important;
-    }
-    .stTextInput input {
-        background-color: #161920 !important;
-        border: 1px solid #333 !important;
-        color: #eee !important;
+    /* 3. Container Styling (The "Glass" Cards) */
+    div[data-testid="stVerticalBlock"] > div[data-testid="stVerticalBlockBorderWrapper"] {
+        background-color: #161920;
+        border: 1px solid #30333d;
+        border-radius: 10px;
+        padding: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
     }
 
-    /* 5. BLUE BUTTONS (Standardized) */
+    /* 4. Typography & Headers */
+    h1 {
+        font-family: 'Impact', sans-serif !important;
+        color: #3b8ed0 !important;
+        font-size: 32px !important;
+        text-shadow: 0 0 10px rgba(59, 142, 208, 0.4);
+        margin-bottom: 0px !important;
+    }
+    h3 {
+        font-family: 'Roboto', sans-serif !important;
+        font-size: 14px !important;
+        font-weight: 700 !important;
+        color: #888 !important;
+        text-transform: uppercase;
+        margin-top: 0px !important;
+        letter-spacing: 1px;
+    }
+    
+    /* 5. Blue Buttons (Cyber Style) */
     div.stButton > button {
         width: 100%;
-        border-radius: 4px;
-        font-weight: bold;
-        font-size: 12px !important;
-        background-color: #0e1117;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 13px;
+        background-color: #1f232d;
         color: #3b8ed0;
         border: 1px solid #3b8ed0;
-        height: 32px !important;
-        padding: 0px 10px !important;
+        transition: all 0.2s ease-in-out;
+        height: 38px;
     }
     div.stButton > button:hover {
         background-color: #3b8ed0;
         color: white;
+        box-shadow: 0 0 12px rgba(59, 142, 208, 0.6);
+        border-color: #3b8ed0;
     }
     div.stButton > button:active {
-        background-color: #2a6fa8;
+        background-color: #1a5c8e;
         color: white;
     }
 
-    /* 6. TABS Styling */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 2px;
-        background-color: #0e1117;
+    /* 6. Inputs (Clean & Dark) */
+    .stTextInput input, .stTextArea textarea {
+        background-color: #0e1117 !important;
+        color: #e0e0e0 !important;
+        border: 1px solid #333 !important;
+        font-family: 'Consolas', monospace !important;
+        border-radius: 5px;
     }
-    .stTabs [data-baseweb="tab"] {
-        height: 30px;
-        padding: 0px 10px;
-        font-size: 12px;
-        color: #888;
-    }
-    .stTabs [data-baseweb="tab"][aria-selected="true"] {
-        color: #3b8ed0;
-        border-bottom-color: #3b8ed0;
+    .stTextArea textarea {
+        resize: none; /* Lock size for perfect layout */
     }
     
-    /* 7. Code Blocks in Guide */
-    code {
-        color: #a6e22e !important;
-        background-color: #161920 !important;
-        font-size: 10px !important;
-        padding: 2px 4px !important;
-        border: 1px solid #222;
+    /* 7. Neural Guide Styling */
+    .guide-item {
+        background-color: #0e1117;
+        border-left: 3px solid #3b8ed0;
+        padding: 8px 10px;
+        margin-bottom: 6px;
+        border-radius: 0 4px 4px 0;
     }
+    .guide-cmd {
+        font-family: 'Consolas', monospace;
+        font-size: 11px;
+        color: #a6e22e; /* Code Green */
+    }
+    .guide-desc {
+        font-family: 'Roboto', sans-serif;
+        font-size: 11px;
+        color: #888;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-bottom: 2px;
+    }
+
 </style>
 """, unsafe_allow_html=True)
 
 # --- 3. INITIALIZE ENGINES ---
-if 'ingestor' not in st.session_state:
+if 'engines_loaded' not in st.session_state:
     st.session_state.ingestor = NeuralIngestor()
     st.session_state.intent_engine = CognitiveIntentEngine()
     st.session_state.action_suite = ExecutionActionSuite()
+    st.session_state.engines_loaded = True
 
 # --- 4. SESSION STATE ---
 if 'df' not in st.session_state: st.session_state.df = None
 if 'chat_log' not in st.session_state: st.session_state.chat_log = []
 if 'undo_stack' not in st.session_state: st.session_state.undo_stack = []
 
-# --- 5. FUNCTIONS ---
+# --- 5. LOGIC FUNCTIONS ---
 def log_msg(sender, msg):
     timestamp = pd.Timestamp.now().strftime("%H:%M")
     icon = "🦇" if sender == "JEFF" else "👤" if sender == "USER" else "⚠️"
@@ -134,7 +152,7 @@ def ingest_data():
         df = SchemaLockMaster().lock(df, schema)
         st.session_state.df = df
         log_msg("JEFF", f"Data Materialized. {len(df)} rows.")
-        st.toast("Loaded", icon="✅")
+        st.toast("Loaded Successfully", icon="✅")
     except Exception as e:
         log_msg("ERROR", str(e))
         st.error(f"Error: {e}")
@@ -177,81 +195,106 @@ with st.sidebar:
     for log_entry in st.session_state.chat_log:
         st.markdown(log_entry)
 
-# --- 7. MAIN LAYOUT (GRID SYSTEM) ---
+# --- 7. MAIN LAYOUT (SINGLE SCREEN GRID) ---
 st.title("🦇 JEFF DATA ANALYST")
 
-# 4 Columns: Input (15%) | Actions (15%) | Guide (20%) | Output (50%)
-# This ensures everything fits horizontally without scrolling.
-c1, c2, c3, c4 = st.columns([0.8, 0.8, 1.2, 3], gap="small")
+# 4 Columns: Input | Controls | Guide | Data
+# Using 'border=True' creates the cards, which our CSS then beautifies.
+c1, c2, c3, c4 = st.columns([1, 1, 1.2, 3], gap="small")
 
-# === COL 1: INPUT ===
+# === CARD 1: INPUT ===
 with c1:
-    st.markdown("### 1. INPUT")
-    # Fixed height to match the rest of the layout (approx 600px total workspace)
-    st.text_area("Data", height=500, key="raw_input_area", placeholder="Paste Data...", label_visibility="collapsed")
-    st.button("⚡ LOAD", on_click=ingest_data)
+    with st.container(border=True):
+        st.markdown("### 1. INPUT")
+        st.text_area("Data", height=500, key="raw_input_area", placeholder="Paste Excel/CSV...", label_visibility="collapsed")
+        st.button("⚡ LOAD DATA", on_click=ingest_data)
 
-# === COL 2: CONTROLS ===
+# === CARD 2: CONTROLS ===
 with c2:
-    st.markdown("### 2. CONTROL")
-    st.text_input("Cmd", key="cmd_input_box", placeholder="Command...", label_visibility="collapsed", on_change=run_command)
-    
-    st.button("▶ RUN", on_click=run_command)
-    st.button("⏪ UNDO", on_click=undo_action)
-    
-    st.divider()
-    
-    # Save Logic
-    if st.session_state.df is not None:
-        fname = st.text_input("Name:", value="data", label_visibility="collapsed")
-        clean_df = st.session_state.df.loc[:, ~st.session_state.df.columns.str.startswith('_')]
-        buffer = io.BytesIO()
-        with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-            clean_df.to_excel(writer, index=False)
-        st.download_button("⬇️ SAVE", data=buffer, file_name=f"{fname}.xlsx", mime="application/vnd.ms-excel")
-    else:
-        st.button("⬇️ SAVE", disabled=True)
-
-# === COL 3: COMPACT TABS GUIDE ===
-with c3:
-    st.markdown("### 3. GUIDE")
-    
-    # TABS: The secret to "No Scroll" information density
-    tab_edit, tab_clean, tab_ana = st.tabs(["EDIT", "CLEAN", "ANALYSIS"])
-    
-    with tab_edit:
-        st.caption("**Modification**")
-        st.markdown("`Update Salary to 5000 where ID is 1`")
-        st.markdown("`Update Row 5 Name to Batman`")
-        st.caption("**Structure**")
-        st.markdown("`Rename 'Old' to 'New'`")
-        st.markdown("`Delete Row 5`")
+    with st.container(border=True):
+        st.markdown("### 2. CONTROL")
+        st.text_input("Cmd", key="cmd_input_box", placeholder="Type Command...", label_visibility="collapsed", on_change=run_command)
         
-    with tab_clean:
-        st.caption("**Fixing Data**")
-        st.markdown("`Fill missing in Age with 0`")
-        st.markdown("`Replace 'NY' with 'New York'`")
-        st.markdown("`Dedupe` (Remove duplicates)")
-        st.markdown("`Dedupe by Email`")
+        st.button("▶ EXECUTE", on_click=run_command)
+        st.button("⏪ UNDO", on_click=undo_action)
+        
+        st.markdown("---")
+        
+        # Save Logic (Always visible if data exists)
+        if st.session_state.df is not None:
+            fname = st.text_input("Filename:", value="data", label_visibility="collapsed")
+            clean_df = st.session_state.df.loc[:, ~st.session_state.df.columns.str.startswith('_')]
+            buffer = io.BytesIO()
+            with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
+                clean_df.to_excel(writer, index=False)
+            st.download_button("⬇️ DOWNLOAD", data=buffer, file_name=f"{fname}.xlsx", mime="application/vnd.ms-excel")
+        else:
+            st.button("⬇️ DOWNLOAD", disabled=True)
 
-    with tab_ana:
-        st.caption("**Insights**")
-        st.markdown("`Group by City sum Sales`")
-        st.markdown("`Analyze Salary`")
-        st.caption("**Filters**")
-        st.markdown("`Filter Age > 25`")
-        st.markdown("`Sort by Date Desc`")
+# === CARD 3: AESTHETIC GUIDE ===
+with c3:
+    with st.container(border=True):
+        st.markdown("### 3. GUIDE")
+        
+        # Scrollable container for the guide
+        with st.container(height=540, border=False):
+            st.markdown("""
+            
+            <div class="guide-item">
+                <div class="guide-desc">EDITING</div>
+                <div class="guide-cmd">Update Salary to 5000 where ID is 1</div>
+            </div>
+            <div class="guide-item">
+                <div class="guide-desc">EDITING</div>
+                <div class="guide-cmd">Update Row 5 Name to Batman</div>
+            </div>
 
-# === COL 4: OUTPUT (MAXIMIZED) ===
+            <div class="guide-item">
+                <div class="guide-desc">CLEANING</div>
+                <div class="guide-cmd">Fill missing in Age with 0</div>
+            </div>
+            <div class="guide-item">
+                <div class="guide-desc">CLEANING</div>
+                <div class="guide-cmd">Replace 'NY' with 'New York'</div>
+            </div>
+            <div class="guide-item">
+                <div class="guide-desc">CLEANING</div>
+                <div class="guide-cmd">Dedupe (Removes duplicates)</div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-desc">STRUCTURE</div>
+                <div class="guide-cmd">Rename 'Old' to 'New'</div>
+            </div>
+            <div class="guide-item">
+                <div class="guide-desc">STRUCTURE</div>
+                <div class="guide-cmd">Delete Row 5</div>
+            </div>
+            
+            <div class="guide-item">
+                <div class="guide-desc">ANALYSIS</div>
+                <div class="guide-cmd">Group by City sum Sales</div>
+            </div>
+            <div class="guide-item">
+                <div class="guide-desc">ANALYSIS</div>
+                <div class="guide-cmd">Analyze Salary</div>
+            </div>
+            <div class="guide-item">
+                <div class="guide-desc">VISUALS</div>
+                <div class="guide-cmd">Plot Age</div>
+            </div>
+
+            """, unsafe_allow_html=True)
+
+# === CARD 4: MONITOR ===
 with c4:
-    if st.session_state.df is not None:
-        clean_view = st.session_state.df.loc[:, ~st.session_state.df.columns.str.startswith('_')]
-        rows, cols = clean_view.shape
-        # Header + Dataframe fits perfectly
-        st.markdown(f"<h3 style='color:#2ecc71 !important; margin-bottom:5px;'>ACTIVE DATA: {rows} ROWS | {cols} COLS</h3>", unsafe_allow_html=True)
-        st.dataframe(clean_view, height=580, use_container_width=True)
-    else:
-        # Placeholder to keep layout rigid
-        st.markdown("### MONITOR")
-        st.info("WAITING FOR DATA...")
-        st.markdown("<br><br><br><br><center><h4 style='color:#444;'>NO SIGNAL</h4></center>", unsafe_allow_html=True)
+    with st.container(border=True):
+        if st.session_state.df is not None:
+            clean_view = st.session_state.df.loc[:, ~st.session_state.df.columns.str.startswith('_')]
+            rows, cols = clean_view.shape
+            st.markdown(f"<h3 style='color:#3b8ed0 !important; margin-bottom: 10px;'>ACTIVE DATA: {rows} ROWS | {cols} COLS</h3>", unsafe_allow_html=True)
+            st.dataframe(clean_view, height=580, use_container_width=True)
+        else:
+            st.markdown("### MONITOR")
+            st.info("WAITING FOR SIGNAL...")
+            st.markdown("<br><br><br><center><h4 style='color:#333;'>NO DATA LOADED</h4></center><br><br><br>", unsafe_allow_html=True)
