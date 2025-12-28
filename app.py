@@ -19,7 +19,8 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. CSS STYLING (Blue Buttons & Beautiful Cards) ---
+# --- 2. CSS STYLING (Blue Buttons Only) ---
+# We kept ONLY the CSS for the blue buttons and resizing. No complex HTML cards.
 st.markdown("""
 <style>
     /* Background */
@@ -35,7 +36,6 @@ st.markdown("""
         font-family: 'Consolas', monospace !important;
         resize: vertical !important;
         min-height: 200px !important;
-        border: 1px solid #333 !important;
     }
 
     /* FORCE BLUE BUTTONS */
@@ -57,39 +57,6 @@ st.markdown("""
     div.stButton > button:active {
         background-color: #2a6fa8;
         color: white;
-    }
-    
-    /* NEURAL GUIDE CARDS (The Fix) */
-    .guide-container {
-        height: 500px;
-        overflow-y: auto;
-        padding-right: 10px;
-    }
-    .guide-card {
-        background-color: #1c1f26;
-        border-radius: 8px;
-        padding: 12px;
-        margin-bottom: 12px;
-        border-left: 4px solid #3b8ed0;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-    .guide-title {
-        color: #fff;
-        font-weight: bold;
-        font-size: 14px;
-        margin-bottom: 8px;
-        text-transform: uppercase;
-    }
-    .guide-cmd {
-        background-color: #0e1117;
-        color: #a6e22e; /* Hacker Green */
-        padding: 6px 8px;
-        border-radius: 4px;
-        font-family: 'Consolas', monospace;
-        font-size: 11px;
-        display: block;
-        margin-top: 5px;
-        border: 1px solid #333;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -200,7 +167,7 @@ with col2:
     
     st.divider()
     
-    # Save Logic
+    # Safe Save Logic
     if st.session_state.df is not None:
         st.markdown("**💾 Save File**")
         fname = st.text_input("Filename:", value="analysis", label_visibility="collapsed")
@@ -219,44 +186,33 @@ with col2:
     else:
         st.button("💾 SAVE FILE", disabled=True)
 
-# === COL 3: NEURAL GUIDE (FIXED) ===
+# === COL 3: NEURAL GUIDE (NATIVE STREAMLIT) ===
+# No HTML here. We use st.container with border=True to make "Cards"
 with col3:
     st.subheader("3. GUIDE")
     
-    # CRITICAL FIX: 'unsafe_allow_html=True' enabled here
-    st.markdown("""
-    <div class="guide-container">
-        
-        <div class="guide-card">
-            <div class="guide-title">🛠️ EDITING</div>
-            <div class="guide-cmd">Update Salary to 5000 where ID is 1</div>
-            <div class="guide-cmd">Update Row 5 Name to Batman</div>
-        </div>
+    with st.container(border=True):
+        st.markdown("**🛠️ EDITING**")
+        st.code("Update Salary to 5000 where ID is 1", language=None)
+        st.code("Update Row 5 Name to Batman", language=None)
 
-        <div class="guide-card">
-            <div class="guide-title">🧹 CLEANING</div>
-            <div class="guide-cmd">Fill missing in Age with 0</div>
-            <div class="guide-cmd">Replace 'NY' with 'New York'</div>
-            <div class="guide-cmd">Dedupe (Removes duplicates)</div>
-        </div>
+    with st.container(border=True):
+        st.markdown("**🧹 CLEANING**")
+        st.code("Fill missing in Age with 0", language=None)
+        st.code("Replace 'NY' with 'New York'", language=None)
+        st.code("Dedupe", language=None)
 
-        <div class="guide-card">
-            <div class="guide-title">🏷️ STRUCTURE</div>
-            <div class="guide-cmd">Rename 'Old' to 'New'</div>
-            <div class="guide-cmd">Delete Row 5</div>
-            <div class="guide-cmd">Delete Column 'Tax'</div>
-        </div>
+    with st.container(border=True):
+        st.markdown("**🏷️ STRUCTURE**")
+        st.code("Rename 'Old' to 'New'", language=None)
+        st.code("Delete Row 5", language=None)
 
-        <div class="guide-card">
-            <div class="guide-title">📊 ANALYSIS</div>
-            <div class="guide-cmd">Group by City sum Sales</div>
-            <div class="guide-cmd">Analyze Salary</div>
-            <div class="guide-cmd">Filter Age > 25</div>
-            <div class="guide-cmd">Sort by Date Desc</div>
-        </div>
-
-    </div>
-    """, unsafe_allow_html=True) 
+    with st.container(border=True):
+        st.markdown("**📊 ANALYSIS**")
+        st.code("Group by City sum Sales", language=None)
+        st.code("Analyze Salary", language=None)
+        st.code("Filter Age > 25", language=None)
+        st.code("Plot Age", language=None)
 
 # === COL 4: OUTPUT ===
 with col4:
