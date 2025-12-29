@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import io
+import xlsxwriter # Required for saving images to Excel
 
 # --- IMPORT LOCAL MODULES ---
 from phase2_ingest import NeuralIngestor
@@ -116,6 +117,7 @@ if 'engines_loaded' not in st.session_state:
 if 'df' not in st.session_state: st.session_state.df = None
 if 'chat_log' not in st.session_state: st.session_state.chat_log = []
 if 'undo_stack' not in st.session_state: st.session_state.undo_stack = []
+if 'artifacts' not in st.session_state: st.session_state.artifacts = [] # Store graphs/stats
 
 # --- 5. LOGIC FUNCTIONS ---
 def log_msg(sender, msg):
@@ -132,6 +134,7 @@ def ingest_data():
     log_msg("JEFF", "Ingesting Data...")
     try:
         st.session_state.undo_stack = []
+        st.session_state.artifacts = [] # Reset artifacts on new load
         df = st.session_state.ingestor.build_diagnostic_dataframe(raw_text)
         schema = SchemaInferenceEngine().infer(df)
         df = DataMaterializer().materialize(df, schema)
@@ -160,8 +163,16 @@ def run_command():
     try:
         if intent["action"] == "dedupe" and "subset" not in intent["parameters"]:
              intent["parameters"]["keep"] = "first"
-        new_df, result_msg = st.session_state.action_suite.execute(intent, st.session_state.df)
+        
+        # [CHANGE]: Unpack 3 values now (df, msg, artifact)
+        new_df, result_msg, artifact = st.session_state.action_suite.execute(intent, st.session_state.df)
+        
         st.session_state.df = new_df
+        
+        # [CHANGE]: Store artifact if exists (for download)
+        if artifact:
+            st.session_state.artifacts.append(artifact)
+            
         log_msg("JEFF", result_msg)
     except Exception as e:
         st.session_state.undo_stack.pop()
@@ -212,14 +223,40 @@ with c2:
         if st.session_state.df is not None:
             fname = st.text_input("Filename:", value="data", label_visibility="collapsed")
             clean_df = st.session_state.df.loc[:, ~st.session_state.df.columns.str.startswith('_')]
+            
+            # [CHANGE]: Advanced Download Logic to include Graphs/Analysis
             buffer = io.BytesIO()
             with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-                clean_df.to_excel(writer, index=False)
+                # 1. Write Data
+                clean_df.to_excel(writer, index=False, sheet_name='Data')
+                
+                # 2. Write Artifacts (Plots/Stats)
+                workbook = writer.book
+                
+                # Check for Text Analysis
+                analysis_data = [a['content'] for a in st.session_state.artifacts if a['type'] == 'text']
+                if analysis_data:
+                    ws_stats = workbook.add_worksheet('Analysis')
+                    for i, text in enumerate(analysis_data):
+                        ws_stats.write(i * 10, 0, text) # Spacing out reports
+                        
+                # Check for Plots
+                plots = [a for a in st.session_state.artifacts if a['type'] == 'plot']
+                if plots:
+                    ws_plots = workbook.add_worksheet('Plots')
+                    ws_plots.write(0, 0, "Generated Visualizations")
+                    current_row = 2
+                    for p in plots:
+                        img_stream = io.BytesIO()
+                        p['content'].savefig(img_stream, format='png')
+                        ws_plots.insert_image(current_row, 1, p['filename'], {'image_data': img_stream})
+                        current_row += 25 # Move down for next image
+
             st.download_button("⬇️ DOWNLOAD", data=buffer, file_name=f"{fname}.xlsx", mime="application/vnd.ms-excel")
         else:
             st.button("⬇️ DOWNLOAD", disabled=True)
 
-# === CARD 3: GUIDE (ALL FEATURES INCLUDED) ===
+# === CARD 3: GUIDE (UPDATED WITH NEW FEATURES) ===
 with c3:
     with st.container(border=True):
         st.markdown("### GUIDE")
@@ -232,18 +269,19 @@ with c3:
             <div class="cmd-box"><span class="cmd-title">Update Row</span><span class="cmd-desc">Edit by row number.</span><div class="cmd-code">Update Row 5 Name to Batman</div></div>
             """, unsafe_allow_html=True)
             
-        with t2: # CLEANING
+        with t2: # CLEANING (Updated Dedupe)
             st.markdown("""
             <div class="cmd-box"><span class="cmd-title">Fill Missing</span><span class="cmd-desc">Fix null values.</span><div class="cmd-code">Fill missing in Age with 0</div></div>
             <div class="cmd-box"><span class="cmd-title">Replace</span><span class="cmd-desc">Find & Replace text.</span><div class="cmd-code">Replace 'NY' with 'New York'</div></div>
-            <div class="cmd-box"><span class="cmd-title">Dedupe</span><span class="cmd-desc">Remove exact duplicates.</span><div class="cmd-code">Dedupe</div></div>
+            <div class="cmd-box"><span class="cmd-title">Dedupe</span><span class="cmd-desc">Remove duplicates (Row or Col).</span><div class="cmd-code">Dedupe by Email</div></div>
             """, unsafe_allow_html=True)
             
-        with t3: # STRUCTURE
+        with t3: # STRUCTURE (Added Add Row/Col)
             st.markdown("""
+            <div class="cmd-box"><span class="cmd-title">Add Column</span><span class="cmd-desc">Insert new column.</span><div class="cmd-code">Add Column Status</div></div>
+            <div class="cmd-box"><span class="cmd-title">Add Row</span><span class="cmd-desc">Append empty row.</span><div class="cmd-code">Add Row</div></div>
             <div class="cmd-box"><span class="cmd-title">Rename</span><span class="cmd-desc">Change headers.</span><div class="cmd-code">Rename 'Old' to 'New'</div></div>
-            <div class="cmd-box"><span class="cmd-title">Delete Row</span><span class="cmd-desc">Remove by index.</span><div class="cmd-code">Delete Row 5</div></div>
-            <div class="cmd-box"><span class="cmd-title">Delete Col</span><span class="cmd-desc">Remove column.</span><div class="cmd-code">Delete Column 'Tax'</div></div>
+            <div class="cmd-box"><span class="cmd-title">Delete Row/Col</span><span class="cmd-desc">Remove data.</span><div class="cmd-code">Delete Row 5</div></div>
             """, unsafe_allow_html=True)
             
         with t4: # DATA & VISUALS
@@ -251,7 +289,6 @@ with c3:
             <div class="cmd-box"><span class="cmd-title">Group/Pivot</span><span class="cmd-desc">Aggregate data.</span><div class="cmd-code">Group by City sum Sales</div></div>
             <div class="cmd-box"><span class="cmd-title">Stats</span><span class="cmd-desc">Mean, Max, Min.</span><div class="cmd-code">Analyze Salary</div></div>
             <div class="cmd-box"><span class="cmd-title">Filter</span><span class="cmd-desc">Subset data.</span><div class="cmd-code">Filter Age > 25</div></div>
-            <div class="cmd-box"><span class="cmd-title">Sort</span><span class="cmd-desc">Order data.</span><div class="cmd-code">Sort by Date Desc</div></div>
             <div class="cmd-box"><span class="cmd-title">Plotting</span><span class="cmd-desc">Create Histograms/Bars.</span><div class="cmd-code">Plot Age</div></div>
             """, unsafe_allow_html=True)
 
@@ -267,4 +304,3 @@ with c4:
             st.markdown("### MONITOR")
             st.info("WAITING FOR SIGNAL...")
             st.markdown("<br><br><br><br><center><h4 style='color:#333;'>NO DATA LOADED</h4></center><br><br><br>", unsafe_allow_html=True)
-
