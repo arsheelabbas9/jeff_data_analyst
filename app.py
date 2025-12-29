@@ -267,3 +267,4 @@ with c4:
             st.markdown("### MONITOR")
             st.info("WAITING FOR SIGNAL...")
             st.markdown("<br><br><br><br><center><h4 style='color:#333;'>NO DATA LOADED</h4></center><br><br><br>", unsafe_allow_html=True)
+
