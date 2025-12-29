@@ -3,6 +3,8 @@ import re
 class CognitiveIntentEngine:
     def __init__(self):
         self.intent_map = {
+            'add_row': ['add row', 'insert row', 'new row', 'append row'],
+            'add_col': ['add column', 'insert column', 'new column', 'add col'],
             'update': ['update', 'change', 'set', 'modify'],
             'fill': ['fill', 'impute', 'replace missing', 'nan'],
             'replace': ['replace', 'swap', 'substitute'],
@@ -25,62 +27,74 @@ class CognitiveIntentEngine:
         for action, keywords in self.intent_map.items():
             if any(k in text for k in keywords):
                 found_action = action
+                # Prioritize 'add_col' over 'add_row' if ambiguity exists, but usually distinct
                 break
         
         # 2. Extract Parameters
         params = {}
         
-        # --- PLOTTING ---
-        if found_action == 'plot':
-            # Find which column to plot
-            for col in columns:
-                if col.lower() in text:
-                    params['column'] = col
-                    break
-        
-        # --- RENAMING ---
-        elif found_action == 'rename':
-            # Look for: Rename 'Old' to 'New'
-            # regex to capture text inside quotes or simple words
-            match = re.search(r"rename\s+['\"]?([\w\s]+)['\"]?\s+to\s+['\"]?([\w\s]+)['\"]?", text)
-            if match:
-                params['old_name'] = match.group(1)
-                params['new_name'] = match.group(2)
-        
-        # --- ANALYSIS ---
-        elif found_action == 'analyze':
+        # --- NEW: ADD STRUCTURE ---
+        if found_action == 'add_col':
+            # "Add column Status" -> extract "Status"
+            # Remove the keywords to find the name
+            clean_text = text
+            for k in self.intent_map['add_col']:
+                clean_text = clean_text.replace(k, "")
+            
+            # The remaining text (stripped) is likely the column name
+            col_name = clean_text.strip().title() # Default to Title Case
+            if col_name:
+                params['column'] = col_name
+
+        elif found_action == 'add_row':
+            # "Add row" usually implies appending a blank one, 
+            # unless complex parsing is done. We keep it simple.
+            params['index'] = -1 # Indicator for append
+
+        # --- DEDUPE (Fixed) ---
+        elif found_action == 'dedupe':
+            # Check if user specified a column: "Dedupe by Email"
             for col in columns:
                 if col.lower() in text:
                     params['column'] = col
                     break
 
-        # --- UPDATE ---
+        # --- UPDATE (Fixed) ---
         elif found_action == 'update':
-            # Heuristic: "Update Salary to 5000..."
-            val_match = re.search(r"to\s+['\"]?([\w\.]+)", text)
+            # Improved Regex to capture value: "to 'New Value'" or "to 500"
+            # Captures text after 'to' until end of string or ' in row'
+            val_match = re.search(r"to\s+['\"]?(.+?)['\"]?(?:\s+in\s+row|\s+at\s+index|$)", text)
             if val_match:
-                params['value'] = val_match.group(1)
+                params['value'] = val_match.group(1).strip()
             
-            # Check for Row index
-            row_match = re.search(r"row\s+(\d+)", text)
+            # Row Index
+            row_match = re.search(r"(?:row|index)\s+(\d+)", text)
             if row_match:
                 params['row_index'] = int(row_match.group(1))
             
-            # Check for ID condition "where ID is 5"
+            # ID condition
             id_match = re.search(r"id\s+(?:is|=)\s+(\d+)", text)
             if id_match:
                 params['id_val'] = int(id_match.group(1))
 
+            # Column Name
             for col in columns:
                 if col.lower() in text:
                     params['column'] = col
-                    # Don't break immediately, might overlap
-        
-        # --- DELETION ---
+                    # If value wasn't found via regex (e.g., "Update Salary 5000"), try strict proximity?
+                    # For now, regex 'to' is safest.
+
+        # --- ANALYSIS & PLOTS ---
+        elif found_action in ['analyze', 'plot']:
+            for col in columns:
+                if col.lower() in text:
+                    params['column'] = col
+                    break
+
+        # --- STANDARD OPERATIONS ---
         elif found_action == 'delete_row':
             match = re.search(r"row\s+(\d+)", text)
-            if match:
-                params['index'] = int(match.group(1))
+            if match: params['index'] = int(match.group(1))
                 
         elif found_action == 'delete_col':
             for col in columns:
@@ -88,62 +102,35 @@ class CognitiveIntentEngine:
                     params['column'] = col
                     break
 
-        # --- SORTING ---
-        elif found_action == 'sort':
-            params['ascending'] = 'desc' not in text
-            for col in columns:
-                if col.lower() in text:
-                    params['column'] = col
-                    break
+        elif found_action == 'rename':
+            match = re.search(r"rename\s+['\"]?(.+?)['\"]?\s+to\s+['\"]?(.+?)['\"]?$", text)
+            if match:
+                params['old_name'] = match.group(1)
+                params['new_name'] = match.group(2)
 
-        # --- FILTERING ---
-        elif found_action == 'filter':
-            # Look for > < =
-            if '>' in text:
-                parts = text.split('>')
-                params['operator'] = '>'
-                params['value'] = parts[1].strip()
-            elif '<' in text:
-                parts = text.split('<')
-                params['operator'] = '<'
-                params['value'] = parts[1].strip()
-            
-            for col in columns:
-                if col.lower() in text:
-                    params['column'] = col
-                    break
-        
-        # --- CLEANING ---
         elif found_action == 'fill':
             val_match = re.search(r"with\s+([\w\d\.]+)", text)
-            if val_match:
-                params['value'] = val_match.group(1)
+            if val_match: params['value'] = val_match.group(1)
             for col in columns:
                 if col.lower() in text:
                     params['column'] = col
                     break
 
-        elif found_action == 'replace':
-            # Replace 'A' with 'B'
-            match = re.search(r"replace\s+['\"]?(.+?)['\"]?\s+with\s+['\"]?(.+?)['\"]?$", text)
-            if match:
-                params['old'] = match.group(1)
-                params['new'] = match.group(2)
-        
-        # --- GROUPING ---
-        elif found_action == 'group':
-            # "Group by City sum Sales"
+        elif found_action == 'filter':
+            # Simple operators
+            if '>' in text:
+                params['operator'] = '>'
+                params['value'] = text.split('>')[1].strip()
+            elif '<' in text:
+                params['operator'] = '<'
+                params['value'] = text.split('<')[1].strip()
+            elif '=' in text:
+                params['operator'] = '=='
+                params['value'] = text.split('=')[1].strip()
+            
             for col in columns:
                 if col.lower() in text:
-                    if 'group_col' not in params:
-                        params['group_col'] = col # First col found is grouper
-                    else:
-                        params['agg_col'] = col # Second is target
-            
-            if 'sum' in text: params['agg'] = 'sum'
-            elif 'mean' in text or 'average' in text: params['agg'] = 'mean'
-            elif 'count' in text: params['agg'] = 'count'
-            else: params['agg'] = 'sum' # default
+                    params['column'] = col
 
         return {
             "action": found_action,
